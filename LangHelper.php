@@ -61,6 +61,32 @@ class LangHelper {
 			'zh_CN' => '导入数据中未指定的字段将继承以上配置。'
 		],
 
+		// ===== Host Filter =====
+		'filter.host_group' => [
+			'en_GB' => 'Host Group',
+			'zh_CN' => '主机群组'
+		],
+		'filter.all_groups' => [
+			'en_GB' => '— All Groups —',
+			'zh_CN' => '— 全部群组 —'
+		],
+		'filter.host_name' => [
+			'en_GB' => 'Host Name',
+			'zh_CN' => '主机名称'
+		],
+		'filter.name_placeholder' => [
+			'en_GB' => 'Search by host name...',
+			'zh_CN' => '搜索主机名称...'
+		],
+		'filter.count' => [
+			'en_GB' => 'Showing {total} of {all} hosts',
+			'zh_CN' => '显示 {total}/{all} 台主机'
+		],
+		'filter.no_match' => [
+			'en_GB' => 'No matching hosts found',
+			'zh_CN' => '未找到匹配的主机'
+		],
+
 		// ===== Step 2: Data Input =====
 		'step2.title' => [
 			'en_GB' => 'Step 2: Enter Host Data',

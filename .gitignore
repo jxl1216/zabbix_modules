@@ -13,7 +13,7 @@ Thumbs.db
 *.tmp
 *.log
 TEST_PLAN.md
-GIT_COMMIT_GUIDE.md
+compatibility_test_report.html
 
 # Archive
 *.zip

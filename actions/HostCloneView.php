@@ -53,12 +53,31 @@ class HostCloneView extends CController {
 
 	protected function doAction(): void {
 		// Get all monitored hosts for the source host dropdown.
-		$hosts = API::Host()->get([
+		// Include host group membership so the frontend can filter by group.
+		$host_get_params = [
 			'output' => ['hostid', 'host', 'name'],
 			'filter' => ['status' => HOST_STATUS_MONITORED],
 			'sortfield' => 'name',
 			'preservekeys' => true
-		]);
+		];
+		$host_get_params = CompatHelper::buildHostGetParams($host_get_params);
+
+		$hosts = API::Host()->get($host_get_params);
+
+		// Normalize host data (Zabbix 6.0 uses 'groups', 6.4+ uses 'hostgroups').
+		// Build a hostid → [groupid, groupid, ...] mapping for frontend filtering.
+		$host_group_map = [];
+		$group_result_key = CompatHelper::getHostGroupResultKey();
+		foreach ($hosts as $hostid => $host) {
+			$host = CompatHelper::normalizeHost($host);
+			$host_group_map[$hostid] = [];
+			if (isset($host['hostgroups'])) {
+				foreach ($host['hostgroups'] as $group) {
+					$host_group_map[$hostid][] = $group['groupid'];
+				}
+			}
+			$hosts[$hostid] = $host;
+		}
 
 		// Get all host groups for reference.
 		$host_groups = API::HostGroup()->get([
@@ -78,6 +97,7 @@ class HostCloneView extends CController {
 		$data = [
 			'hosts' => $hosts,
 			'host_groups' => $host_groups,
+			'host_group_map' => $host_group_map,
 			'templates' => $templates,
 			'lang' => LangHelper::getAllForJs()
 		];

@@ -39,27 +39,113 @@
 }
 
 /* ===== Source Host Selection ===== */
+.host-filter-bar {
+	display: flex;
+	align-items: flex-end;
+	gap: 15px;
+	margin-bottom: 12px;
+	padding: 10px 12px;
+	background: #f4f6f8;
+	border: 1px solid #dfe4e7;
+	border-radius: 3px;
+	flex-wrap: wrap;
+}
+
+.host-filter-field {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.host-filter-label {
+	font-size: 11px;
+	font-weight: 600;
+	color: #4d5966;
+	white-space: nowrap;
+}
+
+.filter-group-select {
+	min-width: 200px;
+	padding: 5px 8px;
+	border: 1px solid #afb7be;
+	border-radius: 3px;
+	font-size: 12px;
+	background: #fff;
+	height: 28px;
+	color: #1f2c33;
+}
+
+.filter-group-select:focus {
+	border-color: #4298e8;
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(66, 152, 232, 0.15);
+}
+
+.filter-host-input {
+	min-width: 200px;
+	padding: 5px 8px;
+	border: 1px solid #afb7be;
+	border-radius: 3px;
+	font-size: 12px;
+	background: #fff;
+	height: 28px;
+	color: #1f2c33;
+}
+
+.filter-host-input:focus {
+	border-color: #4298e8;
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(66, 152, 232, 0.15);
+}
+
+.filter-host-input::placeholder {
+	color: #b0b8bf;
+	font-style: italic;
+}
+
+.host-filter-count {
+	font-size: 11px;
+	color: #768d99;
+	padding-bottom: 6px;
+}
+
 .source-host-select-wrapper {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	gap: 10px;
 	margin-bottom: 15px;
 }
 
 .source-host-select {
 	min-width: 350px;
-	padding: 6px 10px;
+	width: 100%;
+	max-width: 600px;
+	padding: 4px;
 	border: 1px solid #afb7be;
 	border-radius: 3px;
-	font-size: 13px;
+	font-size: 12px;
 	background: #fff;
-	height: 30px;
+	height: 200px;
+	overflow-y: auto;
+}
+
+.source-host-select option {
+	padding: 3px 6px;
+}
+
+.source-host-select option:checked {
+	background: #4298e8;
+	color: #fff;
 }
 
 .source-host-select:focus {
 	border-color: #4298e8;
 	outline: none;
 	box-shadow: 0 0 0 2px rgba(66, 152, 232, 0.15);
+}
+
+#load-source-btn {
+	align-self: center;
 }
 
 .source-host-info {
@@ -601,5 +687,31 @@
 
 	.source-host-select {
 		min-width: 250px;
+	}
+
+	.filter-group-select,
+	.filter-host-input {
+		min-width: 160px;
+	}
+}
+
+@media (max-width: 768px) {
+	.host-filter-bar {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.filter-group-select,
+	.filter-host-input {
+		min-width: 100%;
+	}
+
+	.source-host-select-wrapper {
+		flex-direction: column;
+	}
+
+	.source-host-select {
+		max-width: 100%;
+		height: 150px;
 	}
 }

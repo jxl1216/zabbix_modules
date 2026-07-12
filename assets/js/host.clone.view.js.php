@@ -65,19 +65,106 @@
 			updatePreviewButton();
 		});
 
-		// ===== Source Host Selection =====
-		$('#source-host-select').on('change', function() {
-			sourceHostid = $(this).val();
-			$('#hidden-source-hostid').val(sourceHostid);
+	// ===== Source Host Selection with Filtering =====
+	var allHosts = data.hosts || [];
 
-			if (sourceHostid) {
-				$('#load-source-btn').prop('disabled', false);
-			} else {
-				$('#load-source-btn').prop('disabled', true);
-				$('#source-host-info').hide().empty();
+	/**
+	 * Filter hosts by group and name keyword, then rebuild the select list.
+	 */
+	function filterHosts() {
+		var groupFilter = $('#filter-group-select').val() || '';
+		var nameFilter = ($('#filter-host-input').val() || '').toLowerCase().trim();
+
+		var filtered = [];
+		for (var i = 0; i < allHosts.length; i++) {
+			var h = allHosts[i];
+
+			// Group filter: if a group is selected, host must belong to it
+			if (groupFilter) {
+				var inGroup = false;
+				if (h.groupids && h.groupids.length > 0) {
+					for (var j = 0; j < h.groupids.length; j++) {
+						if (h.groupids[j] === groupFilter) {
+							inGroup = true;
+							break;
+						}
+					}
+				}
+				if (!inGroup) continue;
 			}
-			updatePreviewButton();
-		});
+
+			// Name filter: case-insensitive fuzzy match on name or host
+			if (nameFilter) {
+				var name = (h.name || '').toLowerCase();
+				var host = (h.host || '').toLowerCase();
+				if (name.indexOf(nameFilter) < 0 && host.indexOf(nameFilter) < 0) {
+					continue;
+				}
+			}
+
+			filtered.push(h);
+		}
+
+		// Rebuild select options
+		var $select = $('#source-host-select');
+		$select.empty();
+
+		if (filtered.length === 0) {
+			$select.append('<option value="" disabled>' + t('filter.no_match') + '</option>');
+			$('#load-source-btn').prop('disabled', true);
+		} else {
+			for (var k = 0; k < filtered.length; k++) {
+				var host = filtered[k];
+				var label = host.name;
+				if (host.host && host.host !== host.name) {
+					label += ' (' + host.host + ')';
+				}
+				var $opt = $('<option></option>')
+					.val(host.hostid)
+					.text(label);
+				$select.append($opt);
+			}
+		}
+
+		// Update count display
+		var countText = t('filter.count').replace('{total}', filtered.length).replace('{all}', allHosts.length);
+		$('#host-filter-count').text(countText);
+
+		// Reset selection
+		sourceHostid = '';
+		$('#hidden-source-hostid').val('');
+		$('#load-source-btn').prop('disabled', true);
+		$('#source-host-info').hide().empty();
+		updatePreviewButton();
+	}
+
+	// Group filter change
+	$('#filter-group-select').on('change', function() {
+		filterHosts();
+	});
+
+	// Name search input — live filter with debounce
+	var nameFilterTimer = null;
+	$('#filter-host-input').on('input', function() {
+		clearTimeout(nameFilterTimer);
+		nameFilterTimer = setTimeout(function() {
+			filterHosts();
+		}, 200);
+	});
+
+	// Source host selection from list
+	$('#source-host-select').on('change', function() {
+		sourceHostid = $(this).val() || '';
+		$('#hidden-source-hostid').val(sourceHostid);
+
+		if (sourceHostid) {
+			$('#load-source-btn').prop('disabled', false);
+		} else {
+			$('#load-source-btn').prop('disabled', true);
+			$('#source-host-info').hide().empty();
+		}
+		updatePreviewButton();
+	});
 
 		$('#load-source-btn').on('click', function() {
 			if (!sourceHostid) return;
@@ -502,6 +589,9 @@
 		}
 
 		// ===== Initialize =====
+		// Populate source host list with initial filter (all hosts)
+		filterHosts();
+
 		// Start with one empty row (only if table body is empty)
 		if ($('#host-data-tbody tr').length === 0) {
 			addTableRow();

@@ -35,6 +35,28 @@ $template_names = [];
 foreach ($data['templates'] as $template) {
 	$template_names[] = $template['name'];
 }
+
+// Build hosts data array for JavaScript filtering.
+// Each host entry includes: hostid, name, host, groupids[]
+$hosts_js = [];
+$host_group_map = $data['host_group_map'] ?? [];
+foreach ($data['hosts'] as $hostid => $host) {
+	$hosts_js[] = [
+		'hostid' => $host['hostid'],
+		'name' => $host['name'],
+		'host' => $host['host'],
+		'groupids' => $host_group_map[$hostid] ?? []
+	];
+}
+
+// Build host groups data for JavaScript (groupid + name).
+$host_groups_js = [];
+foreach ($data['host_groups'] as $group) {
+	$host_groups_js[] = [
+		'groupid' => $group['groupid'],
+		'name' => $group['name']
+	];
+}
 ?>
 
 <div class="host-clone-page">
@@ -42,14 +64,31 @@ foreach ($data['templates'] as $template) {
 	<div class="host-clone-section">
 		<h3><?= LangHelper::t('step1.title') ?></h3>
 		<p class="description"><?= LangHelper::t('step1.description') ?></p>
+
+		<!-- Filter bar: host group + name search -->
+		<div class="host-filter-bar">
+			<div class="host-filter-field">
+				<label class="host-filter-label" for="filter-group-select"><?= LangHelper::t('filter.host_group') ?></label>
+				<select id="filter-group-select" class="filter-group-select">
+					<option value=""><?= LangHelper::t('filter.all_groups') ?></option>
+					<?php foreach ($data['host_groups'] as $group): ?>
+						<option value="<?= htmlspecialchars($group['groupid']) ?>"><?= htmlspecialchars($group['name']) ?></option>
+					<?php endforeach; ?>
+				</select>
+			</div>
+			<div class="host-filter-field">
+				<label class="host-filter-label" for="filter-host-input"><?= LangHelper::t('filter.host_name') ?></label>
+				<input type="text" id="filter-host-input" class="filter-host-input" placeholder="<?= LangHelper::t('filter.name_placeholder') ?>" autocomplete="off" />
+			</div>
+			<div class="host-filter-field">
+				<span class="host-filter-count" id="host-filter-count"></span>
+			</div>
+		</div>
+
 		<div class="source-host-select-wrapper">
-			<select id="source-host-select" class="source-host-select">
-				<option value=""><?= LangHelper::t('step1.select_placeholder') ?></option>
-				<?php foreach ($data['hosts'] as $host): ?>
-					<option value="<?= htmlspecialchars($host['hostid']) ?>"><?= htmlspecialchars($host['name'] . ' (' . $host['host'] . ')') ?></option>
-				<?php endforeach; ?>
+			<select id="source-host-select" class="source-host-select" size="10">
 			</select>
-			<button type="button" id="load-source-btn" class="btn btn-secondary"><?= LangHelper::t('step1.load_btn') ?></button>
+			<button type="button" id="load-source-btn" class="btn btn-secondary" disabled><?= LangHelper::t('step1.load_btn') ?></button>
 		</div>
 		<div id="source-host-info" class="source-host-info" style="display:none;"></div>
 	</div>
@@ -127,6 +166,8 @@ foreach ($data['templates'] as $template) {
 
 <script type="text/javascript">
 	window.hostCloneData = {
+		hosts: <?= json_encode($hosts_js) ?>,
+		hostGroups: <?= json_encode($host_groups_js) ?>,
 		groupNames: <?= json_encode($group_names) ?>,
 		templateNames: <?= json_encode($template_names) ?>,
 		ajaxUrl: 'zabbix.php?action=host.clone.import',
