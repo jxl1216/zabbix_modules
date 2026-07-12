@@ -65,24 +65,26 @@ foreach ($data['host_groups'] as $group) {
 		<h3><?= LangHelper::t('step1.title') ?></h3>
 		<p class="description"><?= LangHelper::t('step1.description') ?></p>
 
-		<!-- Filter bar: host group + name search -->
-		<div class="host-filter-bar">
-			<div class="host-filter-field">
-				<label class="host-filter-label" for="filter-group-select"><?= LangHelper::t('filter.host_group') ?></label>
-				<select id="filter-group-select" class="filter-group-select">
-					<option value=""><?= LangHelper::t('filter.all_groups') ?></option>
-					<?php foreach ($data['host_groups'] as $group): ?>
-						<option value="<?= htmlspecialchars($group['groupid']) ?>"><?= htmlspecialchars($group['name']) ?></option>
-					<?php endforeach; ?>
-				</select>
+		<!-- Unified search box: hosts and host groups -->
+		<div class="host-search-wrapper">
+			<div class="host-search-input" id="host-search-input">
+				<div class="selected-tags" id="selected-tags"></div>
+				<input type="text" id="host-search-text" class="host-search-text" placeholder="<?= LangHelper::t('search.placeholder') ?>" autocomplete="off" />
 			</div>
-			<div class="host-filter-field">
-				<label class="host-filter-label" for="filter-host-input"><?= LangHelper::t('filter.host_name') ?></label>
-				<input type="text" id="filter-host-input" class="filter-host-input" placeholder="<?= LangHelper::t('filter.name_placeholder') ?>" autocomplete="off" />
+			<div class="host-search-dropdown" id="host-search-dropdown" style="display:none;">
+				<div class="search-category" data-category="host">
+					<div class="search-category-title"><?= LangHelper::t('search.category.host') ?></div>
+					<div class="search-category-items" id="search-host-items"></div>
+				</div>
+				<div class="search-category" data-category="group">
+					<div class="search-category-title"><?= LangHelper::t('search.category.group') ?></div>
+					<div class="search-category-items" id="search-group-items"></div>
+				</div>
+				<div class="search-no-match" id="search-no-match" style="display:none;">
+					<?= LangHelper::t('search.no_match') ?>
+				</div>
 			</div>
-			<div class="host-filter-field">
-				<span class="host-filter-count" id="host-filter-count"></span>
-			</div>
+			<div class="host-search-hint" id="host-search-hint"><?= LangHelper::t('search.hint') ?></div>
 		</div>
 
 		<div class="source-host-select-wrapper">

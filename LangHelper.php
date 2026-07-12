@@ -87,6 +87,32 @@ class LangHelper {
 			'zh_CN' => '未找到匹配的主机'
 		],
 
+		// ===== Unified Search Box =====
+		'search.placeholder' => [
+			'en_GB' => 'Search hosts or host groups...',
+			'zh_CN' => '搜索主机或主机群组...'
+		],
+		'search.hint' => [
+			'en_GB' => 'Type to search. Click a host or host group in the dropdown to filter the list below.',
+			'zh_CN' => '输入关键字搜索。点击下拉框中的主机或主机群组，即可筛选下方列表。'
+		],
+		'search.category.host' => [
+			'en_GB' => 'Hosts',
+			'zh_CN' => '主机'
+		],
+		'search.category.group' => [
+			'en_GB' => 'Host Groups',
+			'zh_CN' => '主机群组'
+		],
+		'search.no_match' => [
+			'en_GB' => 'No matching data',
+			'zh_CN' => '无匹配数据'
+		],
+		'search.remove' => [
+			'en_GB' => 'Remove',
+			'zh_CN' => '移除'
+		],
+
 		// ===== Step 2: Data Input =====
 		'step2.title' => [
 			'en_GB' => 'Step 2: Enter Host Data',
