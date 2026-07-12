@@ -65,26 +65,61 @@ foreach ($data['host_groups'] as $group) {
 		<h3><?= LangHelper::t('step1.title') ?></h3>
 		<p class="description"><?= LangHelper::t('step1.description') ?></p>
 
-		<!-- Unified search box: hosts and host groups -->
-		<div class="host-search-wrapper">
-			<div class="host-search-input" id="host-search-input">
-				<div class="selected-tags" id="selected-tags"></div>
-				<input type="text" id="host-search-text" class="host-search-text" placeholder="<?= LangHelper::t('search.placeholder') ?>" autocomplete="off" />
+		<!-- Host Group Multiselect -->
+		<div class="filter-field-wrapper">
+			<label class="filter-field-label" for="group-ms-input"><?= LangHelper::t('filter.host_group') ?></label>
+			<div class="multiselect-wrapper" id="group-multiselect">
+				<div class="multiselect-selected" id="group-ms-selected"></div>
+				<div class="multiselect-input-row">
+					<input type="text" id="group-ms-input" class="multiselect-input" placeholder="<?= LangHelper::t('multiselect.search_placeholder') ?>" autocomplete="off" />
+					<button type="button" class="btn-grey multiselect-button" id="group-ms-btn"><?= LangHelper::t('multiselect.select_btn') ?></button>
+				</div>
+				<div class="multiselect-dropdown" id="group-ms-dropdown" style="display:none;"></div>
 			</div>
-			<div class="host-search-dropdown" id="host-search-dropdown" style="display:none;">
-				<div class="search-category" data-category="host">
-					<div class="search-category-title"><?= LangHelper::t('search.category.host') ?></div>
-					<div class="search-category-items" id="search-host-items"></div>
+		</div>
+
+		<!-- Host Multiselect (linked to host group) -->
+		<div class="filter-field-wrapper">
+			<label class="filter-field-label" for="host-ms-input"><?= LangHelper::t('filter.host_name') ?></label>
+			<div class="multiselect-wrapper" id="host-multiselect">
+				<div class="multiselect-selected" id="host-ms-selected"></div>
+				<div class="multiselect-input-row">
+					<input type="text" id="host-ms-input" class="multiselect-input" placeholder="<?= LangHelper::t('multiselect.search_placeholder') ?>" autocomplete="off" />
+					<button type="button" class="btn-grey multiselect-button" id="host-ms-btn"><?= LangHelper::t('multiselect.select_btn') ?></button>
 				</div>
-				<div class="search-category" data-category="group">
-					<div class="search-category-title"><?= LangHelper::t('search.category.group') ?></div>
-					<div class="search-category-items" id="search-group-items"></div>
+				<div class="multiselect-dropdown" id="host-ms-dropdown" style="display:none;"></div>
+			</div>
+		</div>
+
+		<!-- Select button popup dialog (shared) -->
+		<div class="ms-popup-overlay" id="ms-popup-overlay" style="display:none;">
+			<div class="ms-popup-dialog">
+				<div class="ms-popup-header">
+					<span class="ms-popup-title" id="ms-popup-title"></span>
+					<button type="button" class="ms-popup-close" id="ms-popup-close">&times;</button>
 				</div>
-				<div class="search-no-match" id="search-no-match" style="display:none;">
-					<?= LangHelper::t('search.no_match') ?>
+				<div class="ms-popup-search">
+					<input type="text" id="ms-popup-search-input" placeholder="<?= LangHelper::t('multiselect.popup_search_placeholder') ?>" autocomplete="off" />
+				</div>
+				<div class="ms-popup-list-wrapper">
+					<table class="ms-popup-table">
+						<thead>
+							<tr>
+								<th class="ms-popup-check-col"><input type="checkbox" id="ms-popup-select-all" /></th>
+								<th class="ms-popup-name-col" id="ms-popup-name-header"><?= LangHelper::t('multiselect.popup_name_header') ?></th>
+							</tr>
+						</thead>
+						<tbody id="ms-popup-tbody"></tbody>
+					</table>
+				</div>
+				<div class="ms-popup-footer">
+					<span class="ms-popup-count" id="ms-popup-count"></span>
+					<div class="ms-popup-actions">
+						<button type="button" class="btn-grey" id="ms-popup-cancel"><?= LangHelper::t('multiselect.popup_cancel') ?></button>
+						<button type="button" class="btn-primary ms-popup-apply" id="ms-popup-apply"><?= LangHelper::t('multiselect.popup_apply') ?></button>
+					</div>
 				</div>
 			</div>
-			<div class="host-search-hint" id="host-search-hint"><?= LangHelper::t('search.hint') ?></div>
 		</div>
 
 		<div class="source-host-select-wrapper">

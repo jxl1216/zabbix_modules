@@ -65,14 +65,21 @@
 			updatePreviewButton();
 		});
 
-	// ===== Unified Host / Host Group Search =====
+	// ===== Dual Multiselect: Host Group + Host (with linkage) =====
 	var allHosts = data.hosts || [];
 	var allGroups = data.hostGroups || [];
-	var selectedTags = [];
-	var searchInputTimer = null;
-	var dropdownVisible = false;
-	var activeItemIndex = -1;
-	var currentFilteredItems = [];
+	var selectedGroups = []; // [{id, name}]
+	var selectedHosts = [];  // [{id, name, host}]
+	var msInputTimer = null;
+	var msDropdownVisible = false;
+	var msActiveItemIndex = -1;
+	var msCurrentFilteredItems = [];
+	var msActiveContext = null; // 'group' or 'host'
+
+	// Popup dialog state
+	var popupContext = null;     // 'group' or 'host'
+	var popupSelected = {};      // id -> {id, name} (temp selections in popup)
+	var popupFilteredItems = []; // current filtered list in popup
 
 	function getHostLabel(host) {
 		var label = host.name || '';
@@ -89,196 +96,485 @@
 		return text.indexOf(keyword) >= 0;
 	}
 
-	function renderTags() {
-		var $container = $('#selected-tags');
-		$container.empty();
-		$.each(selectedTags, function(i, tag) {
-			var label = tag.name;
-			var icon = tag.type === 'host' ? 'H' : 'G';
-			var tagHtml = '<span class="search-tag" data-index="' + i + '" data-type="' + tag.type + '" data-id="' + escapeHtml(tag.id) + '">' +
-				'<span class="search-tag-icon">' + icon + '</span>' +
-				'<span class="search-tag-name">' + escapeHtml(label) + '</span>' +
-				'<span class="search-tag-remove" title="' + t('search.remove') + '">&times;</span>' +
-				'</span>';
-			$container.append(tagHtml);
+	// ===== Get hosts filtered by selected groups =====
+	function getHostsFilteredByGroups() {
+		if (selectedGroups.length === 0) {
+			return allHosts.slice();
+		}
+		var groupIds = selectedGroups.map(function(g) { return g.id; });
+		return allHosts.filter(function(h) {
+			if (!h.groupids || h.groupids.length === 0) return false;
+			for (var i = 0; i < h.groupids.length; i++) {
+				if (groupIds.indexOf(h.groupids[i]) >= 0) return true;
+			}
+			return false;
 		});
+	}
+
+	// ===== Render Selected Tags =====
+	function renderGroupTags() {
+		var $container = $('#group-ms-selected');
+		$container.empty();
+		$.each(selectedGroups, function(i, g) {
+			var html = '<span class="ms-tag" data-type="group" data-id="' + escapeHtml(g.id) + '">' +
+				'<span class="ms-tag-icon">G</span>' +
+				'<span class="ms-tag-name">' + escapeHtml(g.name) + '</span>' +
+				'<span class="ms-tag-remove" title="' + t('search.remove') + '">&times;</span>' +
+				'</span>';
+			$container.append(html);
+		});
+	}
+
+	function renderHostTags() {
+		var $container = $('#host-ms-selected');
+		$container.empty();
+		$.each(selectedHosts, function(i, h) {
+			var label = h.name;
+			if (h.host && h.host !== h.name) {
+				label = h.name + ' (' + h.host + ')';
+			}
+			var html = '<span class="ms-tag" data-type="host" data-id="' + escapeHtml(h.id) + '">' +
+				'<span class="ms-tag-icon">H</span>' +
+				'<span class="ms-tag-name">' + escapeHtml(label) + '</span>' +
+				'<span class="ms-tag-remove" title="' + t('search.remove') + '">&times;</span>' +
+				'</span>';
+			$container.append(html);
+		});
+	}
+
+	// ===== Add/Remove Tags =====
+	function addGroup(id, name) {
+		for (var i = 0; i < selectedGroups.length; i++) {
+			if (selectedGroups[i].id === id) return;
+		}
+		selectedGroups.push({ id: id, name: name });
+		renderGroupTags();
+		pruneHostsByGroups();
+		renderHostTags();
 		applyFilters();
 	}
 
-	function addTag(type, id, name) {
-		// Prevent duplicate tags
-		for (var i = 0; i < selectedTags.length; i++) {
-			if (selectedTags[i].type === type && selectedTags[i].id === id) {
-				return;
-			}
+	function addHost(id, name, host) {
+		for (var i = 0; i < selectedHosts.length; i++) {
+			if (selectedHosts[i].id === id) return;
 		}
-		selectedTags.push({ type: type, id: id, name: name });
-		renderTags();
-		$('#host-search-text').val('').focus();
-		renderDropdown('');
+		selectedHosts.push({ id: id, name: name, host: host || '' });
+		renderHostTags();
+		applyFilters();
 	}
 
-	function removeTag(index) {
-		selectedTags.splice(index, 1);
-		renderTags();
+	function pruneHostsByGroups() {
+		if (selectedGroups.length === 0) return;
+		var filteredHosts = getHostsFilteredByGroups();
+		var validIds = filteredHosts.map(function(h) { return h.hostid; });
+		selectedHosts = selectedHosts.filter(function(h) {
+			return validIds.indexOf(h.id) >= 0;
+		});
 	}
 
-	// ===== Dropdown Rendering =====
-	function renderDropdown(keyword) {
-		var $dropdown = $('#host-search-dropdown');
-		var $hostItems = $('#search-host-items');
-		var $groupItems = $('#search-group-items');
-		var $noMatch = $('#search-no-match');
-		var $categories = $dropdown.find('.search-category');
+	function removeGroup(id) {
+		selectedGroups = selectedGroups.filter(function(g) { return g.id !== id; });
+		renderGroupTags();
+		pruneHostsByGroups();
+		renderHostTags();
+		applyFilters();
+	}
 
+	function removeHost(id) {
+		selectedHosts = selectedHosts.filter(function(h) { return h.id !== id; });
+		renderHostTags();
+		applyFilters();
+	}
+
+	// ===== Inline Dropdown for Group Search =====
+	function renderGroupDropdown(keyword) {
+		var $dd = $('#group-ms-dropdown');
 		keyword = (keyword || '').toLowerCase().trim();
 
-		var matchedHosts = [];
-		$.each(allHosts, function(i, host) {
-			var label = getHostLabel(host);
-			if (fuzzyMatch(label, keyword) || fuzzyMatch(host.host, keyword)) {
-				// Exclude already selected hosts
-				var alreadySelected = false;
-				for (var j = 0; j < selectedTags.length; j++) {
-					if (selectedTags[j].type === 'host' && selectedTags[j].id === host.hostid) {
-						alreadySelected = true;
-						break;
-					}
-				}
-				if (!alreadySelected) {
-					matchedHosts.push(host);
-				}
+		var matched = allGroups.filter(function(g) {
+			if (!fuzzyMatch(g.name, keyword)) return false;
+			for (var i = 0; i < selectedGroups.length; i++) {
+				if (selectedGroups[i].id === g.groupid) return false;
 			}
+			return true;
 		});
 
-		var matchedGroups = [];
-		$.each(allGroups, function(i, group) {
-			if (fuzzyMatch(group.name, keyword)) {
-				// Exclude already selected groups
-				var alreadySelected = false;
-				for (var j = 0; j < selectedTags.length; j++) {
-					if (selectedTags[j].type === 'group' && selectedTags[j].id === group.groupid) {
-						alreadySelected = true;
-						break;
-					}
-				}
-				if (!alreadySelected) {
-					matchedGroups.push(group);
-				}
+		msCurrentFilteredItems = [];
+		$dd.empty();
+
+		if (matched.length === 0) {
+			$dd.append('<div class="ms-dropdown-no-match">' + t('search.no_match') + '</div>');
+		} else {
+			$.each(matched, function(i, g) {
+				var $item = $('<div class="ms-dropdown-item"></div>')
+					.data('id', g.groupid)
+					.data('name', g.name);
+				$item.append('<span class="ms-item-icon group-icon"></span>');
+				$item.append('<span class="ms-item-name">' + escapeHtml(g.name) + '</span>');
+				$dd.append($item);
+				msCurrentFilteredItems.push($item[0]);
+			});
+		}
+
+		$dd.show();
+		msDropdownVisible = true;
+		msActiveItemIndex = -1;
+	}
+
+	// ===== Inline Dropdown for Host Search =====
+	function renderHostDropdown(keyword) {
+		var $dd = $('#host-ms-dropdown');
+		keyword = (keyword || '').toLowerCase().trim();
+
+		var availableHosts = getHostsFilteredByGroups();
+
+		var matched = availableHosts.filter(function(h) {
+			var label = getHostLabel(h);
+			if (!fuzzyMatch(label, keyword) && !fuzzyMatch(h.host, keyword)) return false;
+			for (var i = 0; i < selectedHosts.length; i++) {
+				if (selectedHosts[i].id === h.hostid) return false;
 			}
+			return true;
 		});
 
-		// Build current item list for keyboard navigation
-		currentFilteredItems = [];
-		$hostItems.empty();
-		$groupItems.empty();
+		msCurrentFilteredItems = [];
+		$dd.empty();
 
-		if (matchedHosts.length === 0 && matchedGroups.length === 0) {
-			$categories.hide();
-			$noMatch.show();
-			$dropdown.show();
-			dropdownVisible = true;
-			activeItemIndex = -1;
+		if (matched.length === 0) {
+			$dd.append('<div class="ms-dropdown-no-match">' + t('search.no_match') + '</div>');
+		} else {
+			$.each(matched, function(i, h) {
+				var label = getHostLabel(h);
+				var $item = $('<div class="ms-dropdown-item"></div>')
+					.data('id', h.hostid)
+					.data('name', h.name)
+					.data('host', h.host);
+				$item.append('<span class="ms-item-icon host-icon"></span>');
+				$item.append('<span class="ms-item-name">' + escapeHtml(label) + '</span>');
+				$dd.append($item);
+				msCurrentFilteredItems.push($item[0]);
+			});
+		}
+
+		$dd.show();
+		msDropdownVisible = true;
+		msActiveItemIndex = -1;
+	}
+
+	function hideMsDropdown() {
+		$('.multiselect-dropdown').hide();
+		msDropdownVisible = false;
+		msActiveItemIndex = -1;
+	}
+
+	function setMsActiveItem(index) {
+		$(msCurrentFilteredItems).removeClass('active');
+		if (index >= 0 && index < msCurrentFilteredItems.length) {
+			msActiveItemIndex = index;
+			$(msCurrentFilteredItems[msActiveItemIndex]).addClass('active');
+			msCurrentFilteredItems[msActiveItemIndex].scrollIntoView({ block: 'nearest' });
+		} else {
+			msActiveItemIndex = -1;
+		}
+	}
+
+	// ===== Keyboard Navigation for Multiselect Inputs =====
+	function bindMsKeyboardNavigation($input, context) {
+		$input.on('keydown', function(e) {
+			if (!msDropdownVisible || msActiveContext !== context) {
+				if (e.which === 40) { // down arrow opens dropdown
+					if (context === 'group') renderGroupDropdown($(this).val());
+					else renderHostDropdown($(this).val());
+					msActiveContext = context;
+					e.preventDefault();
+				}
+				return;
+			}
+
+			if (e.which === 40) { // down
+				e.preventDefault();
+				var next = msActiveItemIndex + 1;
+				if (next >= msCurrentFilteredItems.length) next = 0;
+				setMsActiveItem(next);
+			} else if (e.which === 38) { // up
+				e.preventDefault();
+				var prev = msActiveItemIndex - 1;
+				if (prev < 0) prev = msCurrentFilteredItems.length - 1;
+				setMsActiveItem(prev);
+			} else if (e.which === 13) { // enter
+				e.preventDefault();
+				if (msActiveItemIndex >= 0 && msActiveItemIndex < msCurrentFilteredItems.length) {
+					var $item = $(msCurrentFilteredItems[msActiveItemIndex]);
+					if (context === 'group') {
+						addGroup($item.data('id'), $item.data('name'));
+						$('#group-ms-input').val('');
+						renderGroupDropdown('');
+					} else {
+						addHost($item.data('id'), $item.data('name'), $item.data('host'));
+						$('#host-ms-input').val('');
+						renderHostDropdown('');
+					}
+				}
+			} else if (e.which === 27) { // escape
+				e.preventDefault();
+				hideMsDropdown();
+			}
+		});
+	}
+
+	bindMsKeyboardNavigation($('#group-ms-input'), 'group');
+	bindMsKeyboardNavigation($('#host-ms-input'), 'host');
+
+	// ===== Group Input Events =====
+	$('#group-ms-input').on('focus', function() {
+		if (!msDropdownVisible || msActiveContext !== 'group') {
+			renderGroupDropdown($(this).val());
+			msActiveContext = 'group';
+		}
+	});
+
+	$('#group-ms-input').on('input', function() {
+		clearTimeout(msInputTimer);
+		var val = $(this).val();
+		msInputTimer = setTimeout(function() {
+			renderGroupDropdown(val);
+			msActiveContext = 'group';
+		}, 150);
+	});
+
+	// ===== Host Input Events =====
+	$('#host-ms-input').on('focus', function() {
+		if (!msDropdownVisible || msActiveContext !== 'host') {
+			renderHostDropdown($(this).val());
+			msActiveContext = 'host';
+		}
+	});
+
+	$('#host-ms-input').on('input', function() {
+		clearTimeout(msInputTimer);
+		var val = $(this).val();
+		msInputTimer = setTimeout(function() {
+			renderHostDropdown(val);
+			msActiveContext = 'host';
+		}, 150);
+	});
+
+	// ===== Dropdown Item Click =====
+	$(document).on('mousedown', '#group-ms-dropdown .ms-dropdown-item', function(e) {
+		e.preventDefault();
+		var $item = $(this);
+		addGroup($item.data('id'), $item.data('name'));
+		$('#group-ms-input').val('').focus();
+		renderGroupDropdown('');
+	});
+
+	$(document).on('mousedown', '#host-ms-dropdown .ms-dropdown-item', function(e) {
+		e.preventDefault();
+		var $item = $(this);
+		addHost($item.data('id'), $item.data('name'), $item.data('host'));
+		$('#host-ms-input').val('').focus();
+		renderHostDropdown('');
+	});
+
+	// ===== Remove Tag =====
+	$(document).on('click', '.ms-tag-remove', function(e) {
+		e.stopPropagation();
+		var $tag = $(this).closest('.ms-tag');
+		var id = $tag.data('id');
+		var type = $tag.data('type');
+		if (type === 'group') removeGroup(id);
+		else removeHost(id);
+	});
+
+	// ===== Click Outside to Close Dropdown =====
+	$(document).on('click', function(e) {
+		var $target = $(e.target);
+		if (!$target.closest('.multiselect-wrapper').length) {
+			hideMsDropdown();
+		}
+	});
+
+	// ===== Popup Dialog for "Select" Button =====
+	function openPopup(context) {
+		popupContext = context;
+		popupSelected = {};
+
+		if (context === 'group') {
+			$.each(selectedGroups, function(i, g) { popupSelected[g.id] = { id: g.id, name: g.name }; });
+			$('#ms-popup-title').text(t('multiselect.popup_title_group'));
+		} else {
+			$.each(selectedHosts, function(i, h) { popupSelected[h.id] = { id: h.id, name: h.name, host: h.host || '' }; });
+			$('#ms-popup-title').text(t('multiselect.popup_title_host'));
+		}
+
+		$('#ms-popup-search-input').val('');
+		$('#ms-popup-select-all').prop('checked', false);
+		renderPopupList('');
+		$('#ms-popup-overlay').show();
+		$('#ms-popup-search-input').focus();
+	}
+
+	function renderPopupList(keyword) {
+		keyword = (keyword || '').toLowerCase().trim();
+		var $tbody = $('#ms-popup-tbody');
+		$tbody.empty();
+		popupFilteredItems = [];
+
+		var items;
+		if (popupContext === 'group') {
+			items = allGroups.map(function(g) { return { id: g.groupid, name: g.name, host: '' }; });
+		} else {
+			items = getHostsFilteredByGroups().map(function(h) {
+				return { id: h.hostid, name: h.name, host: h.host || '' };
+			});
+		}
+
+		var matched = items.filter(function(item) {
+			var label = item.name;
+			if (item.host && item.host !== item.name) label += ' (' + item.host + ')';
+			return fuzzyMatch(label, keyword) || fuzzyMatch(item.host, keyword);
+		});
+
+		if (matched.length === 0) {
+			$tbody.append('<tr><td colspan="2" class="ms-popup-no-match">' + t('search.no_match') + '</td></tr>');
+			updatePopupCount();
 			return;
 		}
 
-		$categories.show();
-		$noMatch.hide();
-
-		// Hosts
-		if (matchedHosts.length > 0) {
-			$categories.filter('[data-category="host"]').show();
-			$.each(matchedHosts, function(i, host) {
-				var label = getHostLabel(host);
-				var $item = $('<div class="search-item"></div>')
-					.data('type', 'host')
-					.data('id', host.hostid)
-					.data('name', label);
-				$item.append('<span class="search-item-icon host-icon"></span>');
-				$item.append('<span class="search-item-name">' + escapeHtml(label) + '</span>');
-				$hostItems.append($item);
-				currentFilteredItems.push($item[0]);
-			});
-		} else {
-			$categories.filter('[data-category="host"]').hide();
-		}
-
-		// Groups
-		if (matchedGroups.length > 0) {
-			$categories.filter('[data-category="group"]').show();
-			$.each(matchedGroups, function(i, group) {
-				var $item = $('<div class="search-item"></div>')
-					.data('type', 'group')
-					.data('id', group.groupid)
-					.data('name', group.name);
-				$item.append('<span class="search-item-icon group-icon"></span>');
-				$item.append('<span class="search-item-name">' + escapeHtml(group.name) + '</span>');
-				$groupItems.append($item);
-				currentFilteredItems.push($item[0]);
-			});
-		} else {
-			$categories.filter('[data-category="group"]').hide();
-		}
-
-		$dropdown.show();
-		dropdownVisible = true;
-		activeItemIndex = -1;
-	}
-
-	function hideDropdown() {
-		$('#host-search-dropdown').hide();
-		dropdownVisible = false;
-		activeItemIndex = -1;
-	}
-
-	// ===== Keyboard Navigation =====
-	function setActiveItem(index) {
-		$(currentFilteredItems).removeClass('active');
-		if (index >= 0 && index < currentFilteredItems.length) {
-			activeItemIndex = index;
-			var $item = $(currentFilteredItems[activeItemIndex]);
-			$item.addClass('active');
-			currentFilteredItems[activeItemIndex].scrollIntoView({ block: 'nearest' });
-		} else {
-			activeItemIndex = -1;
-		}
-	}
-
-	// ===== Filter Source List by Selected Tags =====
-	function applyFilters() {
-		var selectedHostIds = [];
-		var selectedGroupIds = [];
-
-		$.each(selectedTags, function(i, tag) {
-			if (tag.type === 'host') {
-				selectedHostIds.push(tag.id);
-			} else if (tag.type === 'group') {
-				selectedGroupIds.push(tag.id);
-			}
+		$.each(matched, function(i, item) {
+			var isChecked = popupSelected[item.id] !== undefined;
+			var label = item.name;
+			if (item.host && item.host !== item.name) label += ' (' + item.host + ')';
+			var $tr = $('<tr></tr>')
+				.data('id', item.id)
+				.data('name', item.name)
+				.data('host', item.host);
+			$tr.append('<td class="ms-popup-check-col"><input type="checkbox" class="ms-popup-checkbox"' + (isChecked ? ' checked' : '') + ' /></td>');
+			$tr.append('<td class="ms-popup-name-col">' + escapeHtml(label) + '</td>');
+			$tbody.append($tr);
+			popupFilteredItems.push(item);
 		});
 
+		var allChecked = matched.length > 0 && matched.every(function(item) { return popupSelected[item.id] !== undefined; });
+		$('#ms-popup-select-all').prop('checked', allChecked);
+		updatePopupCount();
+	}
+
+	function updatePopupCount() {
+		var count = Object.keys(popupSelected).length;
+		$('#ms-popup-count').text(t('multiselect.popup_count').replace('{count}', count));
+	}
+
+	// Popup "Select" button click
+	$('#group-ms-btn').on('click', function() { openPopup('group'); });
+	$('#host-ms-btn').on('click', function() { openPopup('host'); });
+
+	// Popup close
+	$('#ms-popup-close').on('click', closePopup);
+	$('#ms-popup-cancel').on('click', closePopup);
+	$('#ms-popup-overlay').on('click', function(e) {
+		if (e.target === this) closePopup();
+	});
+
+	function closePopup() {
+		$('#ms-popup-overlay').hide();
+		popupContext = null;
+		popupSelected = {};
+	}
+
+	// Popup search
+	$('#ms-popup-search-input').on('input', function() {
+		renderPopupList($(this).val());
+	});
+
+	// Popup checkbox toggle (row click)
+	$(document).on('click', '#ms-popup-tbody tr', function(e) {
+		if ($(e.target).is('input[type="checkbox"]')) return;
+		var $cb = $(this).find('.ms-popup-checkbox');
+		$cb.prop('checked', !$cb.prop('checked'));
+		$cb.trigger('change');
+	});
+
+	$(document).on('change', '.ms-popup-checkbox', function() {
+		var $tr = $(this).closest('tr');
+		var id = $tr.data('id');
+		var name = $tr.data('name');
+		var host = $tr.data('host');
+		if ($(this).prop('checked')) {
+			popupSelected[id] = { id: id, name: name, host: host };
+		} else {
+			delete popupSelected[id];
+		}
+		updatePopupCount();
+		var allChecked = popupFilteredItems.length > 0 && popupFilteredItems.every(function(item) { return popupSelected[item.id] !== undefined; });
+		$('#ms-popup-select-all').prop('checked', allChecked);
+	});
+
+	// Popup select-all
+	$('#ms-popup-select-all').on('change', function() {
+		var checked = $(this).prop('checked');
+		$.each(popupFilteredItems, function(i, item) {
+			if (checked) {
+				popupSelected[item.id] = { id: item.id, name: item.name, host: item.host };
+			} else {
+				delete popupSelected[item.id];
+			}
+		});
+		$('.ms-popup-checkbox').prop('checked', checked);
+		updatePopupCount();
+	});
+
+	// Popup apply
+	$('#ms-popup-apply').on('click', function() {
+		if (popupContext === 'group') {
+			selectedGroups = Object.values(popupSelected).map(function(g) {
+				return { id: g.id, name: g.name };
+			}).sort(function(a, b) { return a.name.localeCompare(b.name); });
+			renderGroupTags();
+			pruneHostsByGroups();
+			renderHostTags();
+		} else {
+			selectedHosts = Object.values(popupSelected).map(function(h) {
+				return { id: h.id, name: h.name, host: h.host || '' };
+			}).sort(function(a, b) { return a.name.localeCompare(b.name); });
+			renderHostTags();
+		}
+		applyFilters();
+		closePopup();
+	});
+
+	// ===== Filter Source Host List =====
+	function applyFilters() {
 		var filtered = [];
+
 		$.each(allHosts, function(i, host) {
-			var matchHost = selectedHostIds.length > 0 && selectedHostIds.indexOf(host.hostid) >= 0;
+			var matchHost = false;
 			var matchGroup = false;
-			if (selectedGroupIds.length > 0) {
-				$.each(host.groupids || [], function(j, gid) {
-					if (selectedGroupIds.indexOf(gid) >= 0) {
+
+			for (var j = 0; j < selectedHosts.length; j++) {
+				if (selectedHosts[j].id === host.hostid) {
+					matchHost = true;
+					break;
+				}
+			}
+
+			if (selectedGroups.length > 0) {
+				var groupIds = selectedGroups.map(function(g) { return g.id; });
+				$.each(host.groupids || [], function(k, gid) {
+					if (groupIds.indexOf(gid) >= 0) {
 						matchGroup = true;
 						return false;
 					}
 				});
 			}
 
-			// If no tags selected, show all; otherwise show matching hosts
-			if (selectedTags.length === 0) {
+			if (selectedGroups.length === 0 && selectedHosts.length === 0) {
 				filtered.push(host);
 			} else if (matchHost || matchGroup) {
 				filtered.push(host);
 			}
 		});
 
-		// Rebuild source host select list
 		var $select = $('#source-host-select');
 		$select.empty();
 
@@ -292,87 +588,12 @@
 			});
 		}
 
-		// Reset source host selection
 		sourceHostid = '';
 		$('#hidden-source-hostid').val('');
 		$('#load-source-btn').prop('disabled', true);
 		$('#source-host-info').hide().empty();
 		updatePreviewButton();
 	}
-
-	// ===== Search Input Events =====
-	$('#host-search-input').on('click', function(e) {
-		if (!$(e.target).closest('.search-tag-remove').length) {
-			$('#host-search-text').focus();
-		}
-	});
-
-	$('#host-search-text').on('focus', function() {
-		if (!dropdownVisible) {
-			renderDropdown($(this).val());
-		}
-	});
-
-	$('#host-search-text').on('input', function() {
-		clearTimeout(searchInputTimer);
-		var val = $(this).val();
-		searchInputTimer = setTimeout(function() {
-			renderDropdown(val);
-		}, 150);
-	});
-
-	$('#host-search-text').on('keydown', function(e) {
-		if (!dropdownVisible) {
-			if (e.which === 40) { // down arrow: open dropdown
-				renderDropdown($(this).val());
-				e.preventDefault();
-			}
-			return;
-		}
-
-		if (e.which === 40) { // down arrow
-			e.preventDefault();
-			var next = activeItemIndex + 1;
-			if (next >= currentFilteredItems.length) next = 0;
-			setActiveItem(next);
-		} else if (e.which === 38) { // up arrow
-			e.preventDefault();
-			var prev = activeItemIndex - 1;
-			if (prev < 0) prev = currentFilteredItems.length - 1;
-			setActiveItem(prev);
-		} else if (e.which === 13) { // enter
-			e.preventDefault();
-			if (activeItemIndex >= 0 && activeItemIndex < currentFilteredItems.length) {
-				var $item = $(currentFilteredItems[activeItemIndex]);
-				addTag($item.data('type'), $item.data('id'), $item.data('name'));
-			}
-		} else if (e.which === 27) { // escape
-			e.preventDefault();
-			hideDropdown();
-		}
-	});
-
-	// ===== Dropdown Item Selection =====
-	$(document).on('mousedown', '#search-host-items .search-item, #search-group-items .search-item', function(e) {
-		e.preventDefault();
-		var $item = $(this);
-		addTag($item.data('type'), $item.data('id'), $item.data('name'));
-	});
-
-	// ===== Remove Tag =====
-	$(document).on('click', '.search-tag-remove', function(e) {
-		e.stopPropagation();
-		var index = $(this).closest('.search-tag').data('index');
-		removeTag(index);
-	});
-
-	// ===== Click Outside to Close Dropdown =====
-	$(document).on('click', function(e) {
-		var $target = $(e.target);
-		if (!$target.closest('.host-search-wrapper').length) {
-			hideDropdown();
-		}
-	});
 
 	// ===== Source Host Selection from List =====
 	$('#source-host-select').on('change', function() {

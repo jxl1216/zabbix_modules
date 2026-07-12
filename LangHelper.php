@@ -113,6 +113,44 @@ class LangHelper {
 			'zh_CN' => '移除'
 		],
 
+		// ===== Multiselect Control =====
+		'multiselect.search_placeholder' => [
+			'en_GB' => 'Type to search...',
+			'zh_CN' => '输入关键字搜索...'
+		],
+		'multiselect.select_btn' => [
+			'en_GB' => 'Select',
+			'zh_CN' => '选择'
+		],
+		'multiselect.popup_title_group' => [
+			'en_GB' => 'Select Host Groups',
+			'zh_CN' => '选择主机群组'
+		],
+		'multiselect.popup_title_host' => [
+			'en_GB' => 'Select Hosts',
+			'zh_CN' => '选择主机'
+		],
+		'multiselect.popup_search_placeholder' => [
+			'en_GB' => 'Search...',
+			'zh_CN' => '搜索...'
+		],
+		'multiselect.popup_name_header' => [
+			'en_GB' => 'Name',
+			'zh_CN' => '名称'
+		],
+		'multiselect.popup_count' => [
+			'en_GB' => '{count} selected',
+			'zh_CN' => '已选 {count} 项'
+		],
+		'multiselect.popup_cancel' => [
+			'en_GB' => 'Cancel',
+			'zh_CN' => '取消'
+		],
+		'multiselect.popup_apply' => [
+			'en_GB' => 'Apply',
+			'zh_CN' => '应用'
+		],
+
 		// ===== Step 2: Data Input =====
 		'step2.title' => [
 			'en_GB' => 'Step 2: Enter Host Data',
