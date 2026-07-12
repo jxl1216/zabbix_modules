@@ -1,0 +1,20 @@
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+
+# Temp files
+*.tmp
+*.log
+TEST_PLAN.md
+GIT_COMMIT_GUIDE.md
+
+# Archive
+*.zip
+*.tar.gz
