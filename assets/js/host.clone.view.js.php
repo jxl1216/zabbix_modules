@@ -144,8 +144,9 @@
 
 	// ===== Add/Remove Tags =====
 	function addGroup(id, name) {
+		id = String(id);
 		for (var i = 0; i < selectedGroups.length; i++) {
-			if (selectedGroups[i].id === id) return;
+			if (String(selectedGroups[i].id) === id) return;
 		}
 		selectedGroups.push({ id: id, name: name });
 		renderGroupTags();
@@ -155,8 +156,9 @@
 	}
 
 	function addHost(id, name, host) {
+		id = String(id);
 		for (var i = 0; i < selectedHosts.length; i++) {
-			if (selectedHosts[i].id === id) return;
+			if (String(selectedHosts[i].id) === id) return;
 		}
 		selectedHosts.push({ id: id, name: name, host: host || '' });
 		renderHostTags();
@@ -173,7 +175,8 @@
 	}
 
 	function removeGroup(id) {
-		selectedGroups = selectedGroups.filter(function(g) { return g.id !== id; });
+		id = String(id);
+		selectedGroups = selectedGroups.filter(function(g) { return String(g.id) !== id; });
 		renderGroupTags();
 		pruneHostsByGroups();
 		renderHostTags();
@@ -181,7 +184,8 @@
 	}
 
 	function removeHost(id) {
-		selectedHosts = selectedHosts.filter(function(h) { return h.id !== id; });
+		id = String(id);
+		selectedHosts = selectedHosts.filter(function(h) { return String(h.id) !== id; });
 		renderHostTags();
 		applyFilters();
 	}
@@ -400,10 +404,10 @@
 		popupSelected = {};
 
 		if (context === 'group') {
-			$.each(selectedGroups, function(i, g) { popupSelected[g.id] = { id: g.id, name: g.name }; });
+			$.each(selectedGroups, function(i, g) { popupSelected[String(g.id)] = { id: String(g.id), name: g.name }; });
 			$('#ms-popup-title').text(t('multiselect.popup_title_group'));
 		} else {
-			$.each(selectedHosts, function(i, h) { popupSelected[h.id] = { id: h.id, name: h.name, host: h.host || '' }; });
+			$.each(selectedHosts, function(i, h) { popupSelected[String(h.id)] = { id: String(h.id), name: h.name, host: h.host || '' }; });
 			$('#ms-popup-title').text(t('multiselect.popup_title_host'));
 		}
 
@@ -442,7 +446,7 @@
 		}
 
 		$.each(matched, function(i, item) {
-			var isChecked = popupSelected[item.id] !== undefined;
+			var isChecked = popupSelected[String(item.id)] !== undefined;
 			var label = item.name;
 			if (item.host && item.host !== item.name) label += ' (' + item.host + ')';
 			var $tr = $('<tr></tr>')
@@ -455,7 +459,7 @@
 			popupFilteredItems.push(item);
 		});
 
-		var allChecked = matched.length > 0 && matched.every(function(item) { return popupSelected[item.id] !== undefined; });
+		var allChecked = matched.length > 0 && matched.every(function(item) { return popupSelected[String(item.id)] !== undefined; });
 		$('#ms-popup-select-all').prop('checked', allChecked);
 		updatePopupCount();
 	}
@@ -497,7 +501,7 @@
 
 	$(document).on('change', '.ms-popup-checkbox', function() {
 		var $tr = $(this).closest('tr');
-		var id = $tr.data('id');
+		var id = String($tr.data('id'));
 		var name = $tr.data('name');
 		var host = $tr.data('host');
 		if ($(this).prop('checked')) {
@@ -506,7 +510,7 @@
 			delete popupSelected[id];
 		}
 		updatePopupCount();
-		var allChecked = popupFilteredItems.length > 0 && popupFilteredItems.every(function(item) { return popupSelected[item.id] !== undefined; });
+		var allChecked = popupFilteredItems.length > 0 && popupFilteredItems.every(function(item) { return popupSelected[String(item.id)] !== undefined; });
 		$('#ms-popup-select-all').prop('checked', allChecked);
 	});
 
@@ -514,10 +518,11 @@
 	$('#ms-popup-select-all').on('change', function() {
 		var checked = $(this).prop('checked');
 		$.each(popupFilteredItems, function(i, item) {
+			var sid = String(item.id);
 			if (checked) {
-				popupSelected[item.id] = { id: item.id, name: item.name, host: item.host };
+				popupSelected[sid] = { id: sid, name: item.name, host: item.host };
 			} else {
-				delete popupSelected[item.id];
+				delete popupSelected[sid];
 			}
 		});
 		$('.ms-popup-checkbox').prop('checked', checked);
@@ -528,14 +533,14 @@
 	$('#ms-popup-apply').on('click', function() {
 		if (popupContext === 'group') {
 			selectedGroups = Object.values(popupSelected).map(function(g) {
-				return { id: g.id, name: g.name };
+				return { id: String(g.id), name: g.name };
 			}).sort(function(a, b) { return a.name.localeCompare(b.name); });
 			renderGroupTags();
 			pruneHostsByGroups();
 			renderHostTags();
 		} else {
 			selectedHosts = Object.values(popupSelected).map(function(h) {
-				return { id: h.id, name: h.name, host: h.host || '' };
+				return { id: String(h.id), name: h.name, host: h.host || '' };
 			}).sort(function(a, b) { return a.name.localeCompare(b.name); });
 			renderHostTags();
 		}
