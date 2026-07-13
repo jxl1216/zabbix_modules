@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,12 +25,26 @@ jobs:
         echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
         echo "RELEASE_TAG=v$VERSION" >> $GITHUB_OUTPUT
 
+    - name: Check if tag exists
+      id: check_tag
+      run: |
+        TAG="v${{ steps.extract_version.outputs.VERSION }}"
+        if git tag -l | grep -q "^${TAG}$"; then
+          echo "TAG_EXISTS=true" >> $GITHUB_OUTPUT
+        else
+          echo "TAG_EXISTS=false" >> $GITHUB_OUTPUT
+        fi
+
     - name: Get commit messages
       id: commit_messages
       run: |
-        PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "v0.0")
-        echo "PREV_TAG=$PREV_TAG" >> $GITHUB_OUTPUT
-        COMMITS=$(git log --oneline $PREV_TAG..HEAD)
+        TAG="v${{ steps.extract_version.outputs.VERSION }}"
+        if [ "${{ steps.check_tag.outputs.TAG_EXISTS }}" = "true" ]; then
+          COMMITS=$(git log --oneline $TAG..HEAD 2>/dev/null || git log --oneline -1)
+        else
+          # First release, get last 10 commits or all if less
+          COMMITS=$(git log --oneline -10)
+        fi
         echo "COMMITS<<EOF" >> $GITHUB_OUTPUT
         echo "$COMMITS" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT

@@ -47,33 +47,35 @@
 
 ## 安装步骤
 
-### 方法一：通过 Git 克隆安装
-
-```bash
-# Zabbix 6.0 / 7.0 部署方法
-git clone https://github.com/jxl1216/zabbix_modules.git /usr/share/zabbix/modules/
-
-# Zabbix 7.4 / 8.0 部署方法
-git clone https://github.com/jxl1216/zabbix_modules.git /usr/share/zabbix/ui/modules/
-```
-
-### 方法二：通过 Releases 下载安装
+### 方法一：通过 Releases 下载安装（推荐）
 
 1. 访问 [Releases](https://github.com/jxl1216/zabbix_modules/releases) 页面
 2. 下载最新版本的 `HostBatchClone_vX.X.zip` 文件
-3. 解压并将 `HostBatchClone` 目录复制到对应位置：
-   ```bash
-   # Zabbix 6.0 / 7.0
-   unzip HostBatchClone_vX.X.zip -d /usr/share/zabbix/modules/
-
-   # Zabbix 7.4 / 8.0
-   unzip HostBatchClone_vX.X.zip -d /usr/share/zabbix/ui/modules/
-   ```
-
-### ⚠️ 修改 manifest.json 文件
+3. 解压并部署：
 
 ```bash
-# ⚠️ 如果使用 Zabbix 6.0，修改 manifest_version
+# Zabbix 6.0 / 7.0
+unzip HostBatchClone_vX.X.zip -d /usr/share/zabbix/modules/
+
+# Zabbix 7.4 / 8.0
+unzip HostBatchClone_vX.X.zip -d /usr/share/zabbix/ui/modules/
+```
+
+### 方法二：通过 Git 克隆安装
+
+```bash
+# Zabbix 6.0 / 7.0
+git clone https://github.com/jxl1216/zabbix_modules.git /usr/share/zabbix/modules/zabbix_modules
+
+# Zabbix 7.4 / 8.0
+git clone https://github.com/jxl1216/zabbix_modules.git /usr/share/zabbix/ui/modules/zabbix_modules
+```
+
+### ⚠️ Zabbix 6.0 兼容性处理
+
+**仅 Zabbix 6.0 用户需要执行此步骤！**
+
+```bash
 # Zabbix 6.0 / 7.0
 sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' /usr/share/zabbix/modules/zabbix_modules/HostBatchClone/manifest.json
 
@@ -81,31 +83,27 @@ sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' /usr/share/zabbix/mo
 sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' /usr/share/zabbix/ui/modules/zabbix_modules/HostBatchClone/manifest.json
 ```
 
-如果使用 Zabbix 7.0+ 或 8.0+，则无需修改，保持默认值即可。
+Zabbix 7.0+ / 8.0+ 用户无需修改，保持默认值即可。
 
 ### 启用模块
 
-1. 设置文件所有权：
-   ```bash
-   # Zabbix 6.0 / 7.0
-   chown -R nginx:nginx /usr/share/zabbix/modules/zabbix_modules/HostBatchClone/
-   # 或 chown -R www-data:www-data /usr/share/zabbix/modules/zabbix_modules/HostBatchClone/
+```bash
+# 设置文件所有权（根据你的 Web 服务器用户选择）
+# Zabbix 6.0 / 7.0
+chown -R nginx:nginx /usr/share/zabbix/modules/zabbix_modules/HostBatchClone/
+# 或 chown -R www-data:www-data /usr/share/zabbix/modules/zabbix_modules/HostBatchClone/
 
-   # Zabbix 7.4 / 8.0
-   chown -R nginx:nginx /usr/share/zabbix/ui/modules/zabbix_modules/HostBatchClone/
-   # 或 chown -R www-data:www-data /usr/share/zabbix/ui/modules/zabbix_modules/HostBatchClone/
-   ```
+# Zabbix 7.4 / 8.0
+chown -R nginx:nginx /usr/share/zabbix/ui/modules/zabbix_modules/HostBatchClone/
+# 或 chown -R www-data:www-data /usr/share/zabbix/ui/modules/zabbix_modules/HostBatchClone/
 
-2. 重载 PHP-FPM：
-   ```bash
-   systemctl reload php-fpm
-   ```
+# 重载 PHP-FPM
+systemctl reload php-fpm
+```
 
-3. 进入 Zabbix Web 界面，导航到 **Administration → General → Modules**。
-
-4. 点击 **Scan directory** 扫描新模块，找到"主机批量导入"模块并启用。
-
-5. 刷新页面，模块将在 **Data collection（数据采集）** 菜单下显示为"主机批量导入"，位于"Hosts（主机）"之后。
+1. 进入 Zabbix Web 界面，导航到 **Administration → General → Modules**。
+2. 点击 **Scan directory** 扫描新模块，找到"主机批量导入"模块并启用。
+3. 刷新页面，模块将在 **Data collection（数据采集）** 菜单下显示为"主机批量导入"，位于"Hosts（主机）"之后。
 
 ## 注意事项
 
