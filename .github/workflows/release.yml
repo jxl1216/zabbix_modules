@@ -11,60 +11,23 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
+    - name: Checkout
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-
-    - name: Extract version from manifest.json
-      id: extract_version
+    - name: Extract version
+      id: version
       run: |
         VERSION=$(jq -r '.version' HostBatchClone/manifest.json)
         echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-        echo "RELEASE_TAG=v$VERSION" >> $GITHUB_OUTPUT
-
-    - name: Validate PHP syntax
-      run: |
-        find HostBatchClone -name "*.php" -type f | while read -r phpfile; do
-          php -l "$phpfile" || exit 1
-        done
-
-    - name: Archive files
-      run: |
-        zip -r HostBatchClone_v${{ steps.extract_version.outputs.VERSION }}.zip HostBatchClone/
-        ls -la HostBatchClone_v${{ steps.extract_version.outputs.VERSION }}.zip
-
-    - name: Get commit messages
-      id: commit_messages
-      run: |
-        COMMITS=$(git log --oneline -10)
-        echo "COMMITS<<EOF" >> $GITHUB_OUTPUT
-        echo "$COMMITS" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
-
-    - name: Delete existing tag if exists
+    - name: Zip
+      run: zip -r HostBatchClone_v${{ steps.version.outputs.VERSION }}.zip HostBatchClone/
+    - name: Create Release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        TAG="v${{ steps.extract_version.outputs.VERSION }}"
-        if git tag -l | grep -q "^${TAG}$"; then
-          git tag -d "$TAG"
-          git push origin ":$TAG"
-        fi
-
-    - name: Create Release with asset
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COMMITS: "${{ steps.commit_messages.outputs.COMMITS }}"
-      run: |
-        TAG="v${{ steps.extract_version.outputs.VERSION }}"
-        NAME="HostBatchClone v${{ steps.extract_version.outputs.VERSION }}"
-        BODY="## Changes\n\n$COMMITS\n\n## Installation\n\nDownload the zip file below and extract the \\`HostBatchClone\\` directory to your Zabbix modules directory.\n\n- Zabbix 6.0 / 7.0: \\`/usr/share/zabbix/modules/\\`\n- Zabbix 7.4 / 8.0: \\`/usr/share/zabbix/ui/modules/\\`"
-        echo "$BODY" | gh release create "$TAG" \
-          --title "$NAME" \
-          --body-file - \
-          --draft=false \
-          --prerelease=false \
-          HostBatchClone_v${{ steps.extract_version.outputs.VERSION }}.zip
+        gh release create v${{ steps.version.outputs.VERSION }} \
+          --title "HostBatchClone v${{ steps.version.outputs.VERSION }}" \
+          --body "## Installation\n\nExtract HostBatchClone directory to your Zabbix modules directory." \
+          HostBatchClone_v${{ steps.version.outputs.VERSION }}.zip
