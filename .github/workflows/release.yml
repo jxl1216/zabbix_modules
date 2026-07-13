@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Get version
+      id: version
+      run: |
+        VERSION=$(jq -r '.version' HostBatchClone/manifest.json)
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+    - name: Create TAR.GZ
+      run: tar -czvf HostBatchClone_v${{ steps.version.outputs.VERSION }}.tar.gz HostBatchClone/
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.version.outputs.VERSION }}
+        release_name: HostBatchClone v${{ steps.version.outputs.VERSION }}
+        body: |
+          ## Installation
+          
+          Extract HostBatchClone directory to your Zabbix modules directory.
+        draft: false
+        prerelease: false
+    - name: Upload Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: HostBatchClone_v${{ steps.version.outputs.VERSION }}.tar.gz
+                asset_name: HostBatchClone_v${{ steps.version.outputs.VERSION }}.tar.gz
+                asset_content_type: application/gzip
