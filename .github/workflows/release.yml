@@ -24,30 +24,14 @@ jobs:
         VERSION=$(jq -r '.version' HostBatchClone/manifest.json)
         echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
         echo "RELEASE_TAG=v$VERSION" >> $GITHUB_OUTPUT
+        echo "DEBUG: VERSION=$VERSION, RELEASE_TAG=v$VERSION"
 
-    - name: Check if tag exists
-      id: check_tag
+    - name: Debug info
       run: |
-        TAG="v${{ steps.extract_version.outputs.VERSION }}"
-        if git tag -l | grep -q "^${TAG}$"; then
-          echo "TAG_EXISTS=true" >> $GITHUB_OUTPUT
-        else
-          echo "TAG_EXISTS=false" >> $GITHUB_OUTPUT
-        fi
-
-    - name: Get commit messages
-      id: commit_messages
-      run: |
-        TAG="v${{ steps.extract_version.outputs.VERSION }}"
-        if [ "${{ steps.check_tag.outputs.TAG_EXISTS }}" = "true" ]; then
-          COMMITS=$(git log --oneline $TAG..HEAD 2>/dev/null || git log --oneline -1)
-        else
-          # First release, get last 10 commits or all if less
-          COMMITS=$(git log --oneline -10)
-        fi
-        echo "COMMITS<<EOF" >> $GITHUB_OUTPUT
-        echo "$COMMITS" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+        echo "Current directory: $(pwd)"
+        ls -la
+        echo "Git tags:"
+        git tag -l
 
     - name: Validate PHP syntax
       run: |
@@ -58,24 +42,41 @@ jobs:
     - name: Archive files
       run: |
         zip -r HostBatchClone_v${{ steps.extract_version.outputs.VERSION }}.zip HostBatchClone/
+        ls -la HostBatchClone_v${{ steps.extract_version.outputs.VERSION }}.zip
 
-    - name: Create Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{ steps.extract_version.outputs.RELEASE_TAG }}
-        name: HostBatchClone v${{ steps.extract_version.outputs.VERSION }}
-        body: |
-          ## Changes
+    - name: Get commit messages
+      id: commit_messages
+      run: |
+        COMMITS=$(git log --oneline -10)
+        echo "COMMITS<<EOF" >> $GITHUB_OUTPUT
+        echo "$COMMITS" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        echo "DEBUG: Commits to include:"
+        echo "$COMMITS"
 
-          ${{ steps.commit_messages.outputs.COMMITS }}
-
-          ## Installation
-          
-          Download the zip file below and extract the `HostBatchClone` directory to your Zabbix modules directory.
-          
-          - Zabbix 6.0 / 7.0: `/usr/share/zabbix/modules/`
-          - Zabbix 7.4 / 8.0: `/usr/share/zabbix/ui/modules/`
-        files: |
-          HostBatchClone_v${{ steps.extract_version.outputs.VERSION }}.zip
+    - name: Create Release with GitHub CLI
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        TAG="v${{ steps.extract_version.outputs.VERSION }}"
+        NAME="HostBatchClone v${{ steps.extract_version.outputs.VERSION }}"
+        BODY=$(cat <<EOF
+## Changes
+
+${{ steps.commit_messages.outputs.COMMITS }}
+
+## Installation
+
+Download the zip file below and extract the \`HostBatchClone\` directory to your Zabbix modules directory.
+
+- Zabbix 6.0 / 7.0: \`/usr/share/zabbix/modules/\`
+- Zabbix 7.4 / 8.0: \`/usr/share/zabbix/ui/modules/\`
+EOF
+        )
+        echo "DEBUG: Creating release with tag=$TAG, name=$NAME"
+        gh release create "$TAG" \
+          --title "$NAME" \
+          --body "$BODY" \
+          --draft=false \
+          --prerelease=false \
+          HostBatchClone_v${{ steps.extract_version.outputs.VERSION }}.zip
