@@ -1,4 +1,17 @@
-# IDE
+node_modules/
+.DS_Store
+dist/
+build/
+.env
+.env.local
+*.log
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+.next/
+coverage/
+
 .idea/
 .vscode/
 *.swp
@@ -6,15 +19,12 @@
 *~
 .DS_Store
 
-# OS
 Thumbs.db
 
-# Temp files
 *.tmp
 *.log
 TEST_PLAN.md
 compatibility_test_report.html
 
-# Archive
 *.zip
 *.tar.gz
