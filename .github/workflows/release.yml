@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Extract version from manifest.json
+      id: extract_version
+      run: |
+        VERSION=$(jq -r '.version' HostBatchClone/manifest.json)
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "RELEASE_TAG=v$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Get commit messages
+      id: commit_messages
+      run: |
+        PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "v0.0")
+        echo "PREV_TAG=$PREV_TAG" >> $GITHUB_OUTPUT
+        COMMITS=$(git log --oneline $PREV_TAG..HEAD)
+        echo "COMMITS<<EOF" >> $GITHUB_OUTPUT
+        echo "$COMMITS" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Validate PHP syntax
+      run: |
+        find HostBatchClone -name "*.php" -type f | while read -r phpfile; do
+          php -l "$phpfile" || exit 1
+        done
+
+    - name: Archive files
+      run: |
+        zip -r HostBatchClone_v${{ steps.extract_version.outputs.VERSION }}.zip HostBatchClone/
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.extract_version.outputs.RELEASE_TAG }}
+        name: HostBatchClone v${{ steps.extract_version.outputs.VERSION }}
+        body: |
+          ## Changes
+
+          ${{ steps.commit_messages.outputs.COMMITS }}
+
+          ## Installation
+          
+          Download the zip file below and extract the `HostBatchClone` directory to your Zabbix modules directory.
+          
+          - Zabbix 6.0 / 7.0: `/usr/share/zabbix/modules/`
+          - Zabbix 7.4 / 8.0: `/usr/share/zabbix/ui/modules/`
+        files: |
+          HostBatchClone_v${{ steps.extract_version.outputs.VERSION }}.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

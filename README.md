@@ -47,7 +47,7 @@
 
 ## 安装步骤
 
-### 安装模块
+### 方法一：通过 Git 克隆安装
 
 ```bash
 # Zabbix 6.0 / 7.0 部署方法
@@ -57,11 +57,28 @@ git clone https://github.com/jxl1216/zabbix_modules.git /usr/share/zabbix/module
 git clone https://github.com/jxl1216/zabbix_modules.git /usr/share/zabbix/ui/modules/
 ```
 
+### 方法二：通过 Releases 下载安装
+
+1. 访问 [Releases](https://github.com/jxl1216/zabbix_modules/releases) 页面
+2. 下载最新版本的 `HostBatchClone_vX.X.zip` 文件
+3. 解压并将 `HostBatchClone` 目录复制到对应位置：
+   ```bash
+   # Zabbix 6.0 / 7.0
+   unzip HostBatchClone_vX.X.zip -d /usr/share/zabbix/modules/
+
+   # Zabbix 7.4 / 8.0
+   unzip HostBatchClone_vX.X.zip -d /usr/share/zabbix/ui/modules/
+   ```
+
 ### ⚠️ 修改 manifest.json 文件
 
 ```bash
 # ⚠️ 如果使用 Zabbix 6.0，修改 manifest_version
-sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' HostBatchClone/manifest.json
+# Zabbix 6.0 / 7.0
+sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' /usr/share/zabbix/modules/zabbix_modules/HostBatchClone/manifest.json
+
+# Zabbix 7.4 / 8.0
+sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' /usr/share/zabbix/ui/modules/zabbix_modules/HostBatchClone/manifest.json
 ```
 
 如果使用 Zabbix 7.0+ 或 8.0+，则无需修改，保持默认值即可。
@@ -70,8 +87,13 @@ sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' HostBatchClone/manif
 
 1. 设置文件所有权：
    ```bash
-   chown -R nginx:nginx /usr/share/zabbix/ui/modules/HostBatchClone/
-   # 或 chown -R www-data:www-data /usr/share/zabbix/ui/modules/HostBatchClone/
+   # Zabbix 6.0 / 7.0
+   chown -R nginx:nginx /usr/share/zabbix/modules/zabbix_modules/HostBatchClone/
+   # 或 chown -R www-data:www-data /usr/share/zabbix/modules/zabbix_modules/HostBatchClone/
+
+   # Zabbix 7.4 / 8.0
+   chown -R nginx:nginx /usr/share/zabbix/ui/modules/zabbix_modules/HostBatchClone/
+   # 或 chown -R www-data:www-data /usr/share/zabbix/ui/modules/zabbix_modules/HostBatchClone/
    ```
 
 2. 重载 PHP-FPM：
