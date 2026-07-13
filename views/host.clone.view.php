@@ -122,11 +122,6 @@ foreach ($data['host_groups'] as $group) {
 			</div>
 		</div>
 
-		<div class="source-host-select-wrapper">
-			<select id="source-host-select" class="source-host-select" size="10">
-			</select>
-			<button type="button" id="load-source-btn" class="btn btn-secondary" disabled><?= LangHelper::t('step1.load_btn') ?></button>
-		</div>
 		<div id="source-host-info" class="source-host-info" style="display:none;"></div>
 	</div>
 

@@ -157,10 +157,7 @@
 
 	function addHost(id, name, host) {
 		id = String(id);
-		for (var i = 0; i < selectedHosts.length; i++) {
-			if (String(selectedHosts[i].id) === id) return;
-		}
-		selectedHosts.push({ id: id, name: name, host: host || '' });
+		selectedHosts = [{ id: id, name: name, host: host || '' }];
 		renderHostTags();
 		applyFilters();
 	}
@@ -312,12 +309,11 @@
 					if (context === 'group') {
 						addGroup($item.data('id'), $item.data('name'));
 						$('#group-ms-input').val('');
-						renderGroupDropdown('');
 					} else {
 						addHost($item.data('id'), $item.data('name'), $item.data('host'));
 						$('#host-ms-input').val('');
-						renderHostDropdown('');
 					}
+					hideMsDropdown();
 				}
 			} else if (e.which === 27) { // escape
 				e.preventDefault();
@@ -369,7 +365,7 @@
 		var $item = $(this);
 		addGroup($item.data('id'), $item.data('name'));
 		$('#group-ms-input').val('').focus();
-		renderGroupDropdown('');
+		hideMsDropdown();
 	});
 
 	$(document).on('mousedown', '#host-ms-dropdown .ms-dropdown-item', function(e) {
@@ -377,7 +373,7 @@
 		var $item = $(this);
 		addHost($item.data('id'), $item.data('name'), $item.data('host'));
 		$('#host-ms-input').val('').focus();
-		renderHostDropdown('');
+		hideMsDropdown();
 	});
 
 	// ===== Remove Tag =====
@@ -495,8 +491,23 @@
 	$(document).on('click', '#ms-popup-tbody tr', function(e) {
 		if ($(e.target).is('input[type="checkbox"]')) return;
 		var $cb = $(this).find('.ms-popup-checkbox');
-		$cb.prop('checked', !$cb.prop('checked'));
-		$cb.trigger('change');
+		if (popupContext === 'host') {
+			$('.ms-popup-checkbox').prop('checked', false);
+			$cb.prop('checked', true);
+			popupSelected = {};
+			var $tr = $(this);
+			var id = String($tr.data('id'));
+			popupSelected[id] = { id: id, name: $tr.data('name'), host: $tr.data('host') };
+			updatePopupCount();
+			$('#ms-popup-select-all').prop('checked', false);
+			applyPopupSelection();
+			closePopup();
+		} else {
+			$cb.prop('checked', !$cb.prop('checked'));
+			$cb.trigger('change');
+			applyPopupSelection();
+			closePopup();
+		}
 	});
 
 	$(document).on('change', '.ms-popup-checkbox', function() {
@@ -529,8 +540,7 @@
 		updatePopupCount();
 	});
 
-	// Popup apply
-	$('#ms-popup-apply').on('click', function() {
+	function applyPopupSelection() {
 		if (popupContext === 'group') {
 			selectedGroups = Object.values(popupSelected).map(function(g) {
 				return { id: String(g.id), name: g.name };
@@ -545,107 +555,57 @@
 			renderHostTags();
 		}
 		applyFilters();
+	}
+
+	$('#ms-popup-apply').on('click', function() {
+		applyPopupSelection();
 		closePopup();
 	});
 
 	// ===== Filter Source Host List =====
 	function applyFilters() {
-		var filtered = [];
-
-		$.each(allHosts, function(i, host) {
-			var matchHost = false;
-			var matchGroup = false;
-
-			for (var j = 0; j < selectedHosts.length; j++) {
-				if (selectedHosts[j].id === host.hostid) {
-					matchHost = true;
-					break;
-				}
-			}
-
-			if (selectedGroups.length > 0) {
-				var groupIds = selectedGroups.map(function(g) { return g.id; });
-				$.each(host.groupids || [], function(k, gid) {
-					if (groupIds.indexOf(gid) >= 0) {
-						matchGroup = true;
-						return false;
-					}
-				});
-			}
-
-			if (selectedGroups.length === 0 && selectedHosts.length === 0) {
-				filtered.push(host);
-			} else if (matchHost || matchGroup) {
-				filtered.push(host);
-			}
-		});
-
-		var $select = $('#source-host-select');
-		$select.empty();
-
-		if (filtered.length === 0) {
-			$select.append('<option value="" disabled>' + t('filter.no_match') + '</option>');
+		if (selectedHosts.length > 0) {
+			var firstHost = selectedHosts[0];
+			sourceHostid = firstHost.id;
+			$('#hidden-source-hostid').val(sourceHostid);
+			loadSourceHostInfo(sourceHostid);
 		} else {
-			$.each(filtered, function(i, host) {
-				var label = getHostLabel(host);
-				var $opt = $('<option></option>').val(host.hostid).text(label);
-				$select.append($opt);
-			});
-		}
-
-		sourceHostid = '';
-		$('#hidden-source-hostid').val('');
-		$('#load-source-btn').prop('disabled', true);
-		$('#source-host-info').hide().empty();
-		updatePreviewButton();
-	}
-
-	// ===== Source Host Selection from List =====
-	$('#source-host-select').on('change', function() {
-		sourceHostid = $(this).val() || '';
-		$('#hidden-source-hostid').val(sourceHostid);
-
-		if (sourceHostid) {
-			$('#load-source-btn').prop('disabled', false);
-		} else {
-			$('#load-source-btn').prop('disabled', true);
+			sourceHostid = '';
+			$('#hidden-source-hostid').val('');
 			$('#source-host-info').hide().empty();
 		}
 		updatePreviewButton();
-	});
+	}
 
-		$('#load-source-btn').on('click', function() {
-			if (!sourceHostid) return;
+	// ===== Source Host Info Loading =====
+	function loadSourceHostInfo(hostid) {
+		if (!hostid) return;
 
-			var btn = $(this);
-			btn.prop('disabled', true).text(t('step1.loading'));
+		$('#source-host-info').show().html('<div class="loading-msg">' + t('step1.loading') + '</div>');
 
-			$.ajax({
-				url: 'zabbix.php?action=host.clone.source',
-				method: 'POST',
-				data: {
-					source_hostid: sourceHostid
-				},
-				dataType: 'json',
-				success: function(resp) {
-					if (resp.success && resp.source_host) {
-						displaySourceHostInfo(resp.source_host);
-					} else {
-						$('#source-host-info').show().html(
-							'<div class="error-msg">' + (resp.error || t('step1.load_failed')) + '</div>'
-						);
-					}
-				},
-				error: function() {
+		$.ajax({
+			url: 'zabbix.php?action=host.clone.source',
+			method: 'POST',
+			data: {
+				source_hostid: hostid
+			},
+			dataType: 'json',
+			success: function(resp) {
+				if (resp.success && resp.source_host) {
+					displaySourceHostInfo(resp.source_host);
+				} else {
 					$('#source-host-info').show().html(
-						'<div class="error-msg">' + t('step1.load_failed_network') + '</div>'
+						'<div class="error-msg">' + (resp.error || t('step1.load_failed')) + '</div>'
 					);
-				},
-				complete: function() {
-					btn.prop('disabled', false).text(t('step1.load_btn'));
 				}
-			});
+			},
+			error: function() {
+				$('#source-host-info').show().html(
+					'<div class="error-msg">' + t('step1.load_failed_network') + '</div>'
+				);
+			}
 		});
+	}
 
 		function displaySourceHostInfo(host) {
 			var typeNames = {1: t('iface.Agent'), 2: t('iface.SNMP'), 3: t('iface.IPMI'), 4: t('iface.JMX')};
