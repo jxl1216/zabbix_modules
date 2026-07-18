@@ -14,3 +14,4 @@ coverage/
 
 # 开发部署过程文件（不上传远端仓库）
 dev-tools/
+test_screenshots/
