@@ -11,3 +11,6 @@ __pycache__/
 *.pyc
 .next/
 coverage/
+
+# 临时测试截图目录
+test_screenshots/
