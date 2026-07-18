@@ -12,5 +12,5 @@ __pycache__/
 .next/
 coverage/
 
-# 临时测试截图目录
-test_screenshots/
+# 开发部署过程文件（不上传远端仓库）
+dev-tools/
