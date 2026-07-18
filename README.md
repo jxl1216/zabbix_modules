@@ -1,0 +1,218 @@
+# Host Batch Clone 模块
+
+[English](README_en.md)
+
+## ✨ 版本兼容性
+
+本模块兼容 Zabbix 6.0 / 6.4 / 7.0+ / 8.0+ 版本。
+
+- ✅ Zabbix 6.0.x
+- ✅ Zabbix 6.4.x
+- ✅ Zabbix 7.0.x
+- ✅ Zabbix 7.4.x
+- ✅ Zabbix 8.0.x
+
+**兼容性说明**：模块内置智能版本检测机制（`CompatHelper`），自动适配不同版本的 Zabbix API 参数差异（如 6.0 的 `selectGroups` 与 6.4+ 的 `selectHostGroups`、`groups` 与 `hostgroups` 结果键差异、`Zabbix\Core\CModule` 与 `Core\CModule` 命名空间差异等），无需手动配置。语言助手 `LangHelper` 会自动跟随 Zabbix 系统语言设置切换中/英文界面。
+
+## 描述
+
+这是一个 Zabbix 前端模块，用于基于已有监控主机的配置批量克隆导入大量主机。模块在 Zabbix Web 的「数据采集（Data collection）」菜单下新增「主机批量导入」菜单项（位于「主机」之后），支持 CSV 文件导入和在线表格录入两种方式，并提供预览、冲突检测和实时导入进度反馈功能。
+
+![主页面](HostBatchClone/images/image.png)
+![数据录入](HostBatchClone/images/image-1.png)
+![预览导入](HostBatchClone/images/image-2.png)
+![导入结果](HostBatchClone/images/image-3.png)
+
+## 功能特性
+
+- **源主机克隆**：选择任意已有监控主机作为克隆模板，其全部配置（接口、群组、模板、标签、宏、TLS、IPMI、资产模式等）均可被继承
+
+- **双模式数据录入**：
+  - CSV 文件上传：支持 UTF-8 和 GBK 编码，自动表头检测和编码识别，可下载 CSV 模板
+  - 在线表格录入：支持添加/删除行、清空全部，数据实时校验
+
+- **智能字段继承**：仅主机名称和接口 IP 为必填项，其他字段（可见名称、端口、主机群组、模板、标签、宏、描述）留空时自动继承源主机配置
+
+- **主机群组自动创建**：导入时 CSV 中指定的主机群组若不存在，自动调用 API 创建后再关联
+
+- **预览与冲突检测**：导入前全面预览，自动检测主机名冲突、必填字段缺失、批次内重复、与已有主机/模板同名冲突等问题；并以状态标识区分「已存在直接关联」「将新建」「未找到」「继承自源主机」
+
+- **导入进度反馈**：逐台 AJAX 创建主机，实时进度条和成功/失败计数
+
+- **结果报告导出**：导入完成后可下载 CSV 格式的结果报告（含主机名、IP、主机ID、结果、错误信息）
+
+- **中英文双语支持**：界面语言自动跟随 Zabbix 系统设置（`zh_CN` / `en_GB`），无需 gettext 依赖
+
+- **响应式设计**：适配不同屏幕尺寸
+
+- **现代化界面**：遵循 Zabbix 原生设计风格
+
+## 安装步骤
+
+### 方式一：下载 Releases 压缩包（推荐，适合生产部署）
+
+通过 GitHub Releases 下载已打包的 `tar.gz` 压缩包，上传到服务器手动解压部署，无需安装 git。
+
+1. **下载压缩包**
+
+   前往 [Releases 页面](https://github.com/jxl1216/zabbix_modules/releases)，下载最新版本的 `HostBatchClone-x.x.x.tar.gz` 文件到本地。
+
+   也可使用命令行下载（将 `x.x.x` 替换为实际版本号）：
+
+   ```bash
+   wget https://github.com/jxl1216/zabbix_modules/releases/download/vx.x.x/HostBatchClone-x.x.x.tar.gz
+   ```
+
+2. **上传到 Zabbix 服务器**
+
+   将下载的压缩包上传到 Zabbix 服务器（使用 scp、rz 或其他方式）：
+
+   ```bash
+   # 在本地执行，将文件上传到服务器
+   scp HostBatchClone-x.x.x.tar.gz root@<zabbix-server-ip>:/tmp/
+   ```
+
+3. **解压到模块目录**
+
+   在 Zabbix 服务器上执行（根据 Zabbix 版本选择对应目录）：
+
+   ```bash
+   # Zabbix 6.0 / 7.0
+   tar -xzf /tmp/HostBatchClone-x.x.x.tar.gz -C /usr/share/zabbix/modules/
+
+   # Zabbix 7.4 / 8.0
+   tar -xzf /tmp/HostBatchClone-x.x.x.tar.gz -C /usr/share/zabbix/ui/modules/
+   ```
+
+   解压后将在模块目录下生成 `HostBatchClone/` 子目录，结构如下：
+
+   ```text
+   /usr/share/zabbix/ui/modules/
+   └── HostBatchClone/
+       ├── manifest.json
+       ├── Module.php
+       ├── CompatHelper.php
+       ├── LangHelper.php
+       ├── actions/
+       ├── assets/
+       ├── views/
+       ├── images/
+       └── host_batch_clone_template.csv
+   ```
+
+4. **⚠️ 如果使用 Zabbix 6.0，修改 manifest_version**
+
+   ```bash
+   sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' /usr/share/zabbix/modules/HostBatchClone/manifest.json
+   ```
+
+   如果使用 Zabbix 6.4+ / 7.0+ / 8.0+，则无需修改，保持默认值即可。
+
+5. **设置文件所有权并重载 PHP-FPM**
+
+   ```bash
+   # 设置文件所有权（根据实际 Web 服务用户选择）
+   chown -R nginx:nginx /usr/share/zabbix/ui/modules/HostBatchClone/
+   # 或 chown -R www-data:www-data /usr/share/zabbix/ui/modules/HostBatchClone/
+
+   # 重载 PHP-FPM
+   systemctl reload php-fpm
+   ```
+
+6. **清理临时文件**
+
+   ```bash
+   rm -f /tmp/HostBatchClone-x.x.x.tar.gz
+   ```
+
+### 方式二：git clone 直接部署（适合开发/跟踪更新）
+
+```bash
+# Zabbix 6.0 / 7.0 部署方法
+git clone https://github.com/jxl1216/zabbix_modules.git /usr/share/zabbix/modules/
+
+# Zabbix 7.4 / 8.0 部署方法
+git clone https://github.com/jxl1216/zabbix_modules.git /usr/share/zabbix/ui/modules/
+```
+
+如果使用 Zabbix 6.0，同样需要修改 manifest_version：
+
+```bash
+sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' HostBatchClone/manifest.json
+```
+
+### 启用模块
+
+1. 进入 Zabbix Web 界面，导航到 **Administration → General → Modules**。
+2. 点击 **Scan directory** 按钮扫描新模块。
+3. 找到「Host Batch Import / 主机批量导入」模块，点击启用。
+4. 刷新页面，模块将在 **Data collection（数据采集）** 菜单下显示为「主机批量导入」，位于「Hosts（主机）」之后。
+
+## CSV 数据格式
+
+模块附带模板文件 `HostBatchClone/host_batch_clone_template.csv`，可在导入页面点击「下载 CSV 模板」获取。CSV 表头及字段说明：
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| 主机名称(*) | 是 | 主机标识，需全局唯一（与模板共享命名空间） |
+| 可见的名称 | 否 | 留空时使用主机名称 |
+| 接口IP(*) | 是 | 主机接口 IP 地址 |
+| 端口 | 否 | 留空时继承源主机端口 |
+| 主机群组 | 否 | 多个群组用 `;` 分隔，不存在时自动创建 |
+| 模板 | 否 | 多个模板用 `;` 分隔，按 host 或 name 匹配 |
+| 标签 | 否 | 格式 `tag=value`，多个用 `;` 分隔 |
+| 宏 | 否 | 格式 `{$MACRO}=value`，多个用 `;` 分隔 |
+| 描述 | 否 | 主机描述信息 |
+
+示例：
+
+```csv
+主机名称(*),可见的名称,接口IP(*),端口,主机群组,模板,标签,宏,描述
+web-server-01,Web Server 01,192.168.1.10,10050,Servers;Web Servers,Linux by Zabbix Agent;Nginx by HTTP,env=prod;os=linux,{$SNMP_COMMUNITY}=public,Web server 01
+db-server-01,DB Server 01,192.168.1.20,10050,Servers;Database Servers,MySQL by Zabbix Agent,env=prod;os=linux;role=db,{$MYSQL_PORT}=3306,Database server 01
+```
+
+## 注意事项
+
+- **性能考虑**：导入采用逐台串行方式，大批量导入可能需要较长时间。建议单次导入不超过 500 台主机。
+
+- **主机名唯一性**：主机名在 Zabbix 中与模板名共享命名空间，必须全局唯一。预览阶段会同时检测主机和模板冲突。
+
+- **模板依赖**：CSV 中指定的模板必须在 Zabbix 中已存在，否则导入时仅关联已存在的模板（未找到的模板会被标记为「未找到」）。
+
+- **CSV 编码**：建议使用 UTF-8 编码保存 CSV 文件。若中文显示乱码，可在页面切换编码为 GBK 后重新解析。
+
+- **权限要求**：使用本模块需要 Zabbix 管理员（Zabbix Admin）及以上权限。
+
+- **数据准确性**：创建的监控主机基于源主机的当前配置快照。如果源主机在导入过程中被修改，已创建的主机不会受影响。
+
+## 开发
+
+模块基于 Zabbix 模块框架开发。文件结构：
+
+- `HostBatchClone/manifest.json`：模块配置、路由和静态资源声明
+- `HostBatchClone/Module.php`：菜单注册（兼容 `Zabbix\Core\CModule` 与 `Core\CModule`）
+- `HostBatchClone/CompatHelper.php`：Zabbix 6.0/6.4/7.x/8.x API 兼容性辅助类
+- `HostBatchClone/LangHelper.php`：中英文国际化语言管理（纯 PHP 数组实现，无 gettext 依赖）
+- `HostBatchClone/actions/HostCloneView.php`：主页面控制器（源主机选择、CSV 上传、表格录入）
+- `HostBatchClone/actions/HostCloneSource.php`：AJAX 源主机配置加载接口
+- `HostBatchClone/actions/HostClonePreview.php`：预览页面控制器（冲突检测、字段状态）
+- `HostBatchClone/actions/HostCloneImport.php`：AJAX 导入接口（逐台创建主机）
+- `HostBatchClone/views/`：页面视图（主页面、预览、JSON 响应）
+- `HostBatchClone/assets/js/`：JavaScript（CSV 解析、表格管理、AJAX 导入进度）
+- `HostBatchClone/assets/css/`：模块样式表
+- `HostBatchClone/host_batch_clone_template.csv`：CSV 导入模板
+
+如需扩展，可参考 [Zabbix 模块开发文档](https://www.zabbix.com/documentation/current/zh/devel/modules/file_structure)。
+
+## 版本发布
+
+本模块通过 GitHub Actions 自动打包发布。当 `HostBatchClone/manifest.json` 中的 `version` 字段升级并推送到主分支时，将自动触发打包流程，生成 `HostBatchClone-<version>.tar.gz` 压缩包并发布到 [Releases 页面](https://github.com/jxl1216/zabbix_modules/releases)。
+
+每个 Release 包含：
+
+- `HostBatchClone-<version>.tar.gz`：模块完整代码压缩包，解压后即为 `HostBatchClone/` 目录，可直接部署到 Zabbix 模块目录
+
+## 许可证
+
+本项目遵循 GPL-2.0 许可证。
