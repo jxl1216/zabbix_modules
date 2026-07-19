@@ -1,5 +1,7 @@
 # Host Batch Clone 模块
 
+[English](README_en.md)
+
 ## ✨ 版本兼容性
 
 本模块兼容 Zabbix 6.0 / 6.4 / 7.0+ / 8.0+ 版本。
