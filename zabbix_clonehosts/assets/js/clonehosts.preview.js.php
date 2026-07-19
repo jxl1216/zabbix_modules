@@ -29,86 +29,99 @@
 		}
 
 		var successCount = 0;
-		var failedCount = 0;
-		var processedCount = 0;
-		var results = [];
-		var importing = false;
+	var failedCount = 0;
+	var processedCount = 0;
+	var results = [];
+	var importing = false;
+	var importQueue = []; // Only hosts selected for import
 
-		// ===== Start Import =====
-		$('#start-import-btn').on('click', function() {
-			if (importing) return;
-			if (hostData.length === 0) return;
+	// ===== Update import button label based on selected rows =====
+	function updateImportButton() {
+		var selectedCount = $('#preview-table input.row-select:checked').length;
+		$('#start-import-btn').text(t('preview.import_selected').replace('{count}', selectedCount));
+	}
 
-			importing = true;
-			$('#start-import-btn').prop('disabled', true).text(t('import.importing'));
-			$('#import-progress-section').show();
-			$('#import-results-section').hide();
+	// Re-count when a checkbox changes
+	$(document).on('change', '#preview-table input.row-select', function() {
+		updateImportButton();
+	});
 
-			// Reset counters
-			successCount = 0;
-			failedCount = 0;
-			processedCount = 0;
-			results = [];
-			$('#results-tbody').empty();
-			$('#progress-bar').css('width', '0%');
-			$('#progress-text').text('0 / ' + totalCount);
+	// ===== Start Import =====
+	$('#start-import-btn').on('click', function() {
+		if (importing) return;
 
-			// Start processing hosts sequentially
-			processNextHost(0);
+		// Collect only checked & ready rows
+		importQueue = [];
+		$('#preview-table tbody tr').each(function() {
+			var $cb = $(this).find('input.row-select');
+			if ($cb.length && $cb.prop('checked') && $cb.data('ready') == 1) {
+				var idx = parseInt($(this).data('index'), 10);
+				if (!isNaN(idx) && hostData[idx]) {
+					importQueue.push({ rowNum: idx + 1, host: hostData[idx] });
+				}
+			}
 		});
 
-		function processNextHost(index) {
-			if (index >= hostData.length) {
-				// All done
-				finishImport();
-				return;
-			}
+		if (importQueue.length === 0) {
+			alert(t('preview.no_selected'));
+			return;
+		}
 
-			var host = hostData[index];
-			var rowNum = index + 1;
+		importing = true;
+		$('#start-import-btn').prop('disabled', true).text(t('import.importing'));
+		$('#import-progress-section').show();
+		$('#import-results-section').hide();
 
-			$.ajax({
-				url: ajaxUrl,
-				method: 'POST',
-				data: {
-					source_hostid: sourceHostid,
-					host_data: host
-				},
-				dataType: 'json',
-				success: function(resp) {
-					processedCount++;
+		// Reset counters
+		successCount = 0;
+		failedCount = 0;
+		processedCount = 0;
+		results = [];
+		$('#results-tbody').empty();
+		$('#progress-bar').css('width', '0%');
+		$('#progress-text').text('0 / ' + importQueue.length);
+		$('#total-count').text(importQueue.length);
 
-					if (resp.success) {
-						successCount++;
-						addResultRow(rowNum, 'success', host.host, host.ip, resp.hostid || '', '');
-						results.push({
-							row: rowNum,
-							result: 'success',
-							host: host.host,
-							ip: host.ip,
-							hostid: resp.hostid || '',
-							error: ''
-						});
-					} else {
-						failedCount++;
-						var errorMsg = resp.error || t('import.unknown_error');
-						addResultRow(rowNum, 'failed', host.host, host.ip, '', errorMsg);
-						results.push({
-							row: rowNum,
-							result: 'failed',
-							host: host.host,
-							ip: host.ip,
-							hostid: '',
-							error: errorMsg
-						});
-					}
+		// Start processing hosts sequentially
+		processNextHost(0);
+	});
 
-					updateProgress();
-				},
-				error: function(xhr, status, error) {
-					processedCount++;
+	function processNextHost(queueIndex) {
+		if (queueIndex >= importQueue.length) {
+			// All done
+			finishImport();
+			return;
+		}
+
+		var item = importQueue[queueIndex];
+		var rowNum = item.rowNum;
+		var host = item.host;
+
+		$.ajax({
+			url: ajaxUrl,
+			method: 'POST',
+			data: {
+				source_hostid: sourceHostid,
+				host_data: host
+			},
+			dataType: 'json',
+			success: function(resp) {
+				processedCount++;
+
+				if (resp.success) {
+					successCount++;
+					addResultRow(rowNum, 'success', host.host, host.ip, resp.hostid || '', '');
+					results.push({
+						row: rowNum,
+						result: 'success',
+						host: host.host,
+						ip: host.ip,
+						hostid: resp.hostid || '',
+						error: ''
+					});
+				} else {
 					failedCount++;
-					var errorMsg = t('import.ajax_error') + (error || status || t('import.unknown_error'));
+					var errorMsg = resp.error || t('import.unknown_error');
 					addResultRow(rowNum, 'failed', host.host, host.ip, '', errorMsg);
 					results.push({
 						row: rowNum,
@@ -118,24 +131,41 @@
 						hostid: '',
 						error: errorMsg
 					});
-					updateProgress();
-				},
-				complete: function() {
-					// Process next host (small delay to allow UI update)
-					setTimeout(function() {
-						processNextHost(index + 1);
-					}, 50);
 				}
-			});
-		}
 
-		function updateProgress() {
-			var percent = Math.round((processedCount / totalCount) * 100);
-			$('#progress-bar').css('width', percent + '%');
-			$('#progress-text').text(processedCount + ' / ' + totalCount);
-			$('#success-count').text(successCount);
-			$('#failed-count').text(failedCount);
-		}
+				updateProgress();
+			},
+			error: function(xhr, status, error) {
+				processedCount++;
+				failedCount++;
+				var errorMsg = t('import.ajax_error') + (error || status || t('import.unknown_error'));
+				addResultRow(rowNum, 'failed', host.host, host.ip, '', errorMsg);
+				results.push({
+					row: rowNum,
+					result: 'failed',
+					host: host.host,
+					ip: host.ip,
+					hostid: '',
+					error: errorMsg
+				});
+				updateProgress();
+			},
+			complete: function() {
+				// Process next host (small delay to allow UI update)
+				setTimeout(function() {
+					processNextHost(queueIndex + 1);
+				}, 50);
+			}
+		});
+	}
+
+	function updateProgress() {
+		var percent = Math.round((processedCount / importQueue.length) * 100);
+		$('#progress-bar').css('width', percent + '%');
+		$('#progress-text').text(processedCount + ' / ' + importQueue.length);
+		$('#success-count').text(successCount);
+		$('#failed-count').text(failedCount);
+	}
 
 		function addResultRow(rowNum, result, hostName, ip, hostid, error) {
 			var resultClass = result === 'success' ? 'result-success' : 'result-failed';

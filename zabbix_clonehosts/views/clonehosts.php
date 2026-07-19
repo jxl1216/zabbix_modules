@@ -204,6 +204,8 @@ foreach ($data['host_groups'] as $group) {
 		templateNames: <?= json_encode($template_names) ?>,
 		ajaxUrl: 'zabbix.php?action=clonehosts.import',
 		sourceInfoUrl: 'zabbix.php?action=clonehosts.source',
-		lang: <?= json_encode($data['lang'] ?? LangHelper::getAllForJs()) ?>
+		lang: <?= json_encode($data['lang'] ?? LangHelper::getAllForJs()) ?>,
+		returnSourceHostid: <?= json_encode($data['return_source_hostid'] ?? '') ?>,
+		returnHostData: <?= json_encode($data['return_host_data'] ?? []) ?>
 	};
 </script>

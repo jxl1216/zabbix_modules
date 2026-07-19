@@ -44,6 +44,11 @@ class Clonehosts extends CController {
 	}
 
 	protected function checkInput(): bool {
+		$ret = $this->validateInput([
+			'source_hostid' => 'string',
+			'host_data' => 'string',
+			'return_from_preview' => 'in 1'
+		]);
 		return true;
 	}
 
@@ -101,6 +106,20 @@ class Clonehosts extends CController {
 			'templates' => $templates,
 			'lang' => LangHelper::getAllForJs()
 		];
+
+		// Handle return-from-preview: carry back source host + table data so the
+		// online table can be restored instead of being cleared.
+		$return_source_hostid = $this->getInput('source_hostid', '');
+		$return_host_data_raw = $this->getInput('host_data', '');
+		$return_from_preview = $this->getInput('return_from_preview', '');
+
+		if ($return_from_preview === '1') {
+			$return_host_data = json_decode($return_host_data_raw, true);
+			if (is_array($return_host_data)) {
+				$data['return_source_hostid'] = $return_source_hostid;
+				$data['return_host_data'] = $return_host_data;
+			}
+		}
 
 		$response = new CControllerResponseData($data);
 		$this->setResponse($response);

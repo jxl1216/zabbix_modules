@@ -166,6 +166,7 @@ foreach ($host_data as $item) {
 			<table id="preview-table" class="list-table host-data-table">
 				<thead>
 					<tr>
+						<th><?= LangHelper::t('preview.col_select') ?></th>
 						<th>#</th>
 						<th><?= LangHelper::t('col.status') ?></th>
 						<th><?= LangHelper::t('col.host_name') ?></th>
@@ -188,8 +189,13 @@ foreach ($host_data as $item) {
 								? '<span class="icon-conflict" title="' . htmlspecialchars(implode('; ', $conflicts[$idx - 1])) . '">!</span>'
 								: '<span class="icon-ok" title="' . LangHelper::t('preview.ready') . '">&#10003;</span>';
 							$fstatus = $field_status[$idx - 1] ?? [];
+							// Conflict rows: disabled & unchecked; ready rows: checked by default.
+							$checkbox = $has_conflict
+								? '<input type="checkbox" class="row-select" data-ready="0" disabled />'
+								: '<input type="checkbox" class="row-select" data-ready="1" checked />';
 						?>
 						<tr class="<?= $row_class ?>" data-index="<?= $idx - 1 ?>">
+							<td class="col-select"><?= $checkbox ?></td>
 							<td><?= $idx ?></td>
 							<td class="col-status"><?= $status_icon ?></td>
 							<td><?= htmlspecialchars($item['host'] ?? '') ?></td>
@@ -247,8 +253,13 @@ foreach ($host_data as $item) {
 	<!-- Import Actions -->
 	<div class="clonehosts-section">
 		<div class="action-bar">
-			<a href="zabbix.php?action=clonehosts" class="btn btn-back">&#8592; <?= LangHelper::t('preview.back') ?></a>
-			<button type="button" id="start-import-btn" class="btn btn-primary" <?= $conflict_count > 0 ? 'disabled' : '' ?>><?= LangHelper::t('preview.start_import') ?></button>
+			<form id="back-form" method="post" action="zabbix.php?action=clonehosts" style="display:inline;">
+				<input type="hidden" name="source_hostid" value="<?= htmlspecialchars($source_host['hostid'] ?? '') ?>" />
+				<input type="hidden" name="host_data" value="<?= htmlspecialchars(json_encode($js_host_data)) ?>" />
+				<input type="hidden" name="return_from_preview" value="1" />
+				<button type="submit" class="btn btn-back">&#8592; <?= LangHelper::t('preview.back_edit') ?></button>
+			</form>
+			<button type="button" id="start-import-btn" class="btn btn-primary"><?= LangHelper::t('preview.import_selected', ['{count}' => ($total_count - $conflict_count)]) ?></button>
 			<?php if ($conflict_count > 0): ?>
 				<span class="conflict-warning"><?= LangHelper::t('preview.resolve_conflicts') ?></span>
 			<?php endif; ?>

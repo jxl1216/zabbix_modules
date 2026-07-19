@@ -405,8 +405,28 @@ class LangHelper {
 			'zh_CN' => '开始导入'
 		],
 		'preview.resolve_conflicts' => [
-			'en_GB' => 'Please resolve all conflicts before importing.',
-			'zh_CN' => '请在导入前解决所有冲突。'
+			'en_GB' => 'Conflicting hosts will be skipped. You can uncheck ready hosts to exclude them too.',
+			'zh_CN' => '冲突主机将被跳过，您也可以取消勾选就绪主机以排除。'
+		],
+		'preview.back_edit' => [
+			'en_GB' => 'Back to Edit',
+			'zh_CN' => '返回编辑'
+		],
+		'preview.import_selected' => [
+			'en_GB' => 'Import Selected ({count})',
+			'zh_CN' => '导入所选 ({count})'
+		],
+		'preview.no_selected' => [
+			'en_GB' => 'Please select at least one ready host to import.',
+			'zh_CN' => '请至少勾选一台就绪主机进行导入。'
+		],
+		'preview.skipped' => [
+			'en_GB' => 'Skipped',
+			'zh_CN' => '已跳过'
+		],
+		'preview.col_select' => [
+			'en_GB' => 'Import',
+			'zh_CN' => '导入'
 		],
 
 		// ===== Field Status Legend =====
@@ -618,25 +638,29 @@ class LangHelper {
 	}
 
 	/**
-	 * Translate a key to the current language.
+	 * Translate a key to the current language, with optional parameter substitution.
+	 * Supports {placeholder} style parameters in the translation string.
 	 *
 	 * @param string $key Translation key
+	 * @param array $params Optional ['{placeholder}' => 'value'] pairs for substitution
 	 * @return string Translated string (falls back to English, then to the key itself)
 	 */
-	public static function t(string $key): string {
+	public static function t(string $key, array $params = []): string {
 		$lang = self::getLang();
 
 		if (isset(self::$translations[$key][$lang])) {
-			return self::$translations[$key][$lang];
+			$str = self::$translations[$key][$lang];
+		} elseif (isset(self::$translations[$key]['en_GB'])) {
+			$str = self::$translations[$key]['en_GB'];
+		} else {
+			$str = $key;
 		}
 
-		// Fallback to English
-		if (isset(self::$translations[$key]['en_GB'])) {
-			return self::$translations[$key]['en_GB'];
+		if (!empty($params)) {
+			$str = strtr($str, $params);
 		}
 
-		// Fallback to the key itself
-		return $key;
+		return $str;
 	}
 
 	/**

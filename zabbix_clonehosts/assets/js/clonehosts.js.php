@@ -997,14 +997,41 @@
 		}
 
 		// ===== Initialize =====
-		// Populate source host list (all hosts initially)
-		applyFilters();
+	// Handle return-from-preview: restore source host selection + table data.
+	var returnHostData = data.returnHostData || [];
+	var returnSourceHostid = data.returnSourceHostid || '';
 
-		// Start with one empty row (only if table body is empty)
-		if ($('#host-data-tbody tr').length === 0) {
-			addTableRow();
+	if (returnSourceHostid && returnHostData.length > 0) {
+		// Find the source host in the allHosts list to restore its tag.
+		for (var i = 0; i < allHosts.length; i++) {
+			if (String(allHosts[i].hostid) === String(returnSourceHostid)) {
+				selectedHosts = [{
+					id: String(allHosts[i].hostid),
+					name: allHosts[i].name,
+					host: allHosts[i].host || ''
+				}];
+				renderHostTags();
+				break;
+			}
 		}
-		updatePreviewButton();
-	});
+
+		// Switch to the online table tab and populate rows.
+		$('.tab-btn').removeClass('active');
+		$('.tab-btn[data-tab="table"]').addClass('active');
+		$('.tab-content').removeClass('active').hide();
+		$('#tab-table').addClass('active').show();
+
+		populateTableFromRows(returnHostData);
+	}
+
+	// Populate source host list (all hosts initially)
+	applyFilters();
+
+	// Start with one empty row (only if table body is empty and no return data)
+	if ($('#host-data-tbody tr').length === 0) {
+		addTableRow();
+	}
+	updatePreviewButton();
+});
 
 })(jQuery);
