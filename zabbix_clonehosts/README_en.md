@@ -56,15 +56,15 @@ Download the packaged `tar.gz` archive from GitHub Releases, upload it to the se
 
 1. **Download the archive**
 
-   Go to the [Releases page](https://github.com/jxl1216/zabbix_modules/releases) and download the latest `zabbix_clonehosts-x.x.x.tar.gz` file. For example, download `zabbix_clonehosts-1.1.tar.gz`.
+   Go to the [Releases page](https://github.com/jxl1216/zabbix_modules/releases) and download the latest `zabbix_clonehosts-x.x.x.tar.gz` file. For example, download `zabbix_clonehosts-1.2.tar.gz`.
 2. Upload to the Zabbix server and extract to the modules directory:
 
    ```bash
    # Zabbix 6.0 / 7.0
-   tar -xzf zabbix_clonehosts-1.1.tar.gz -C /usr/share/zabbix/modules/
+   tar -xzf zabbix_clonehosts-1.2.tar.gz -C /usr/share/zabbix/modules/
 
    # Zabbix 7.2 / 7.4 / 8.0
-   tar -xzf zabbix_clonehosts-1.1.tar.gz -C /usr/share/zabbix/ui/modules/
+   tar -xzf zabbix_clonehosts-1.2.tar.gz -C /usr/share/zabbix/ui/modules/
    ```
 
    After extraction, a `zabbix_clonehosts/` subdirectory will be created under the modules directory, with the following structure:

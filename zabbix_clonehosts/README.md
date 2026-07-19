@@ -56,15 +56,15 @@
 
 1. **下载压缩包**
 
-   前往 [Releases 页面](https://github.com/jxl1216/zabbix_modules/releases)，下载最新版本的 `zabbix_clonehosts-x.x.x.tar.gz` 文件到本地。如下载 `zabbix_clonehosts-1.1.tar.gz`
+   前往 [Releases 页面](https://github.com/jxl1216/zabbix_modules/releases)，下载最新版本的 `zabbix_clonehosts-x.x.x.tar.gz` 文件到本地。如下载 `zabbix_clonehosts-1.2.tar.gz`
 2. 上传到 Zabbix 服务器并解压到模块目录：
 
 ```bash
 # Zabbix 6.0 / 7.0
-tar -xzf zabbix_clonehosts-1.1.tar.gz -C /usr/share/zabbix/modules/
+tar -xzf zabbix_clonehosts-1.2.tar.gz -C /usr/share/zabbix/modules/
 
 # Zabbix 7.2 / 7.4 / 8.0
-tar -xzf zabbix_clonehosts-1.1.tar.gz -C /usr/share/zabbix/ui/modules/
+tar -xzf zabbix_clonehosts-1.2.tar.gz -C /usr/share/zabbix/ui/modules/
 ```
    ```
 
