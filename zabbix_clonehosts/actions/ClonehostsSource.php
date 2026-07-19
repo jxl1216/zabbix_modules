@@ -18,14 +18,14 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **/
 
-namespace Modules\HostBatchClone\Actions;
+namespace Modules\ZabbixClonehosts\Actions;
 
 use CController,
 	CControllerResponseData,
 	CControllerResponseFatal,
 	API;
-use Modules\HostBatchClone\CompatHelper;
-use Modules\HostBatchClone\LangHelper;
+use Modules\ZabbixClonehosts\CompatHelper;
+use Modules\ZabbixClonehosts\LangHelper;
 
 /**
  * AJAX endpoint to load source host configuration.
@@ -34,7 +34,7 @@ use Modules\HostBatchClone\LangHelper;
  * (interfaces, groups, templates, tags, macros, etc.) as JSON,
  * so the main page can display what will be inherited.
  */
-class HostCloneSource extends CController {
+class ClonehostsSource extends CController {
 
 	public function init(): void {
 		if (method_exists($this, 'disableCsrfValidation')) {

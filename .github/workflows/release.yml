@@ -1,4 +1,4 @@
-name: Release HostBatchClone Module
+name: Release Zabbix Clonehosts Module
 
 # 当 manifest.json 中的 version 字段升级并推送到主分支时，自动打包 tar.gz 并发布 Release。
 # 也支持手动触发（workflow_dispatch）。
@@ -9,7 +9,7 @@ on:
       - main
       - master
     paths:
-      - 'HostBatchClone/manifest.json'
+      - 'zabbix_clonehosts/manifest.json'
   workflow_dispatch:
 
 jobs:
@@ -26,7 +26,7 @@ jobs:
       - name: Read version from manifest.json
         id: version
         run: |
-          VERSION=$(python3 -c "import json; print(json.load(open('HostBatchClone/manifest.json'))['version'])")
+          VERSION=$(python3 -c "import json; print(json.load(open('zabbix_clonehosts/manifest.json'))['version'])")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Detected module version: $VERSION"
 
@@ -45,44 +45,44 @@ jobs:
         if: steps.check_tag.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          # 将 HostBatchClone 目录打包，解压后即为 HostBatchClone/ 目录
-          tar -czf "HostBatchClone-${VERSION}.tar.gz" HostBatchClone
-          echo "Packaged HostBatchClone-${VERSION}.tar.gz:"
-          ls -lh "HostBatchClone-${VERSION}.tar.gz"
+          # 将 zabbix_clonehosts 目录打包，解压后即为 zabbix_clonehosts/ 目录
+          tar -czf "zabbix_clonehosts-${VERSION}.tar.gz" zabbix_clonehosts
+          echo "Packaged zabbix_clonehosts-${VERSION}.tar.gz:"
+          ls -lh "zabbix_clonehosts-${VERSION}.tar.gz"
           echo "--- Archive contents ---"
-          tar -tzf "HostBatchClone-${VERSION}.tar.gz" | head -n 20
+          tar -tzf "zabbix_clonehosts-${VERSION}.tar.gz" | head -n 20
 
       - name: Create tag and publish Release
         if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          name: HostBatchClone v${{ steps.version.outputs.version }}
-          files: HostBatchClone-${{ steps.version.outputs.version }}.tar.gz
+          name: Zabbix Clonehosts v${{ steps.version.outputs.version }}
+          files: zabbix_clonehosts-${{ steps.version.outputs.version }}.tar.gz
           generate_release_notes: true
           draft: false
           prerelease: false
           body: |
-            ## Host Batch Clone 模块 v${{ steps.version.outputs.version }}
+            ## Zabbix Clonehosts 模块 v${{ steps.version.outputs.version }}
 
             ### 部署方式
 
-            1. 下载下方 `HostBatchClone-${{ steps.version.outputs.version }}.tar.gz`
+            1. 下载下方 `zabbix_clonehosts-${{ steps.version.outputs.version }}.tar.gz`
             2. 上传到 Zabbix 服务器并解压到模块目录：
 
             ```bash
             # Zabbix 6.0 / 7.0
-            tar -xzf HostBatchClone-${{ steps.version.outputs.version }}.tar.gz -C /usr/share/zabbix/modules/
+            tar -xzf zabbix_clonehosts-${{ steps.version.outputs.version }}.tar.gz -C /usr/share/zabbix/modules/
 
-            # Zabbix 7.4 / 8.0
-            tar -xzf HostBatchClone-${{ steps.version.outputs.version }}.tar.gz -C /usr/share/zabbix/ui/modules/
+            # Zabbix 7.2 / 7.4 / 8.0
+            tar -xzf zabbix_clonehosts-${{ steps.version.outputs.version }}.tar.gz -C /usr/share/zabbix/ui/modules/
             ```
 
             3. Zabbix 6.0 需修改 manifest_version：
             ```bash
-            sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' /usr/share/zabbix/modules/HostBatchClone/manifest.json
+            sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' /usr/share/zabbix/modules/zabbix_clonehosts/manifest.json
             ```
 
-            4. 设置文件所有权并重载 PHP-FPM，然后在 Administration → General → Modules 中扫描并启用模块。
+            4. 在 Administration → General → Modules 中扫描并启用模块。
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

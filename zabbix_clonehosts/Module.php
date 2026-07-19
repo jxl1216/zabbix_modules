@@ -18,7 +18,7 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **/
 
-namespace Modules\HostBatchClone;
+namespace Modules\ZabbixClonehosts;
 
 use APP,
 	CMenu,
@@ -30,13 +30,13 @@ use APP,
 trait ModuleInitTrait {
 
 	public function init(): void {
-		$menu_label = LangHelper::t('menu.host_batch_import');
+		$menu_label = LangHelper::t('menu.clonehosts');
 
 		APP::Component()->get('menu.main')
 			->findOrAdd(_('Data collection'))
 			->getSubmenu()
 			->insertAfter(_('Hosts'),
-				(new CMenuItem($menu_label))->setAction('host.clone.view')
+				(new CMenuItem($menu_label))->setAction('clonehosts')
 			);
 	}
 }

@@ -15,11 +15,11 @@
 	'use strict';
 
 	$(function() {
-		var config = window.hostClonePreview || {};
+		var config = window.clonehostsPreview || {};
 		var hostData = config.hostData || [];
 		var totalCount = config.totalCount || 0;
 		var sourceHostid = config.sourceHostid || '';
-		var ajaxUrl = config.ajaxUrl || 'zabbix.php?action=host.clone.import';
+		var ajaxUrl = config.ajaxUrl || 'zabbix.php?action=clonehosts.import';
 
 		// ===== i18n =====
 		var L = config.lang || {};

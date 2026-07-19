@@ -18,14 +18,14 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **/
 
-namespace Modules\HostBatchClone\Actions;
+namespace Modules\ZabbixClonehosts\Actions;
 
 use CController,
 	CControllerResponseData,
 	CControllerResponseFatal,
 	API;
-use Modules\HostBatchClone\CompatHelper;
-use Modules\HostBatchClone\LangHelper;
+use Modules\ZabbixClonehosts\CompatHelper;
+use Modules\ZabbixClonehosts\LangHelper;
 
 /**
  * AJAX import endpoint for Host Batch Clone module.
@@ -34,7 +34,7 @@ use Modules\HostBatchClone\LangHelper;
  * configuration, merges inherited fields, and creates the host
  * via the Zabbix API. Returns a JSON result.
  */
-class HostCloneImport extends CController {
+class ClonehostsImport extends CController {
 
 	public function init(): void {
 		if (method_exists($this, 'disableCsrfValidation')) {
@@ -349,7 +349,7 @@ class HostCloneImport extends CController {
 
 	/**
 	 * Set JSON response via CControllerResponseData.
-	 * The view (host.clone.import.php) outputs the data as JSON.
+	 * The view (clonehosts.import.php) outputs the data as JSON.
 	 */
 	private function sendResponse(array $data): void {
 		$this->setResponse(new CControllerResponseData($data));

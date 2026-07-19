@@ -17,7 +17,7 @@
 	'use strict';
 
 	$(function() {
-		var data = window.hostCloneData || {};
+		var data = window.clonehostsData || {};
 		var sourceHostid = '';
 		var parsedRows = [];
 
@@ -584,7 +584,7 @@
 		$('#source-host-info').show().html('<div class="loading-msg">' + t('step1.loading') + '</div>');
 
 		$.ajax({
-			url: 'zabbix.php?action=host.clone.source',
+			url: 'zabbix.php?action=clonehosts.source',
 			method: 'POST',
 			data: {
 				source_hostid: hostid
@@ -839,7 +839,7 @@
 			var blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8;'});
 			var link = document.createElement('a');
 			link.href = URL.createObjectURL(blob);
-			link.download = 'host_batch_clone_template.csv';
+			link.download = 'clonehosts_template.csv';
 			link.click();
 		});
 

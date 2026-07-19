@@ -23,7 +23,7 @@
  * @var array $data
  */
 
-use Modules\HostBatchClone\LangHelper;
+use Modules\ZabbixClonehosts\LangHelper;
 
 $source_host = $data['source_host'];
 $host_data = $data['host_data'];
@@ -87,9 +87,9 @@ foreach ($host_data as $item) {
 }
 ?>
 
-<div class="host-clone-page">
+<div class="clonehosts-page">
 	<!-- Source Host Summary -->
-	<div class="host-clone-section">
+	<div class="clonehosts-section">
 		<h3><?= LangHelper::t('preview.source_config') ?></h3>
 		<div class="source-host-summary">
 			<table class="list-table">
@@ -130,7 +130,7 @@ foreach ($host_data as $item) {
 	</div>
 
 	<!-- Preview Summary -->
-	<div class="host-clone-section">
+	<div class="clonehosts-section">
 		<div class="preview-summary-bar">
 			<?php if ($conflict_count > 0): ?>
 				<span class="summary-item summary-total"><?= LangHelper::t('preview.total') ?> <?= $total_count ?></span>
@@ -144,7 +144,7 @@ foreach ($host_data as $item) {
 	</div>
 
 	<!-- Preview Table -->
-	<div class="host-clone-section">
+	<div class="clonehosts-section">
 		<h3><?= LangHelper::t('preview.title') ?></h3>
 		<div class="field-legend">
 			<span class="field-legend-item">
@@ -243,9 +243,9 @@ foreach ($host_data as $item) {
 	</div>
 
 	<!-- Import Actions -->
-	<div class="host-clone-section">
+	<div class="clonehosts-section">
 		<div class="action-bar">
-			<a href="zabbix.php?action=host.clone.view" class="btn btn-back">&#8592; <?= LangHelper::t('preview.back') ?></a>
+			<a href="zabbix.php?action=clonehosts" class="btn btn-back">&#8592; <?= LangHelper::t('preview.back') ?></a>
 			<button type="button" id="start-import-btn" class="btn btn-primary" <?= $conflict_count > 0 ? 'disabled' : '' ?>><?= LangHelper::t('preview.start_import') ?></button>
 			<?php if ($conflict_count > 0): ?>
 				<span class="conflict-warning"><?= LangHelper::t('preview.resolve_conflicts') ?></span>
@@ -254,7 +254,7 @@ foreach ($host_data as $item) {
 	</div>
 
 	<!-- Import Progress & Results (hidden initially) -->
-	<div id="import-progress-section" class="host-clone-section" style="display:none;">
+	<div id="import-progress-section" class="clonehosts-section" style="display:none;">
 		<h3><?= LangHelper::t('import.progress_title') ?></h3>
 		<div class="progress-bar-wrapper">
 			<div class="progress-bar-container">
@@ -291,10 +291,10 @@ foreach ($host_data as $item) {
 </div>
 
 <script type="text/javascript">
-	window.hostClonePreview = {
+	window.clonehostsPreview = {
 		sourceHostid: <?= json_encode($source_host['hostid'] ?? '') ?>,
 		hostData: <?= json_encode($js_host_data) ?>,
-		ajaxUrl: 'zabbix.php?action=host.clone.import',
+		ajaxUrl: 'zabbix.php?action=clonehosts.import',
 		totalCount: <?= json_encode($total_count) ?>,
 		lang: <?= json_encode(LangHelper::getAllForJs()) ?>
 	};

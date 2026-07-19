@@ -23,7 +23,7 @@
  * @var array $data
  */
 
-use Modules\HostBatchClone\LangHelper;
+use Modules\ZabbixClonehosts\LangHelper;
 
 // Build group and template name lists for JavaScript reference.
 $group_names = [];
@@ -59,9 +59,9 @@ foreach ($data['host_groups'] as $group) {
 }
 ?>
 
-<div class="host-clone-page">
+<div class="clonehosts-page">
 	<!-- Step 1: Source Host Selection -->
-	<div class="host-clone-section">
+	<div class="clonehosts-section">
 		<h3><?= LangHelper::t('step1.title') ?></h3>
 		<p class="description"><?= LangHelper::t('step1.description') ?></p>
 
@@ -126,7 +126,7 @@ foreach ($data['host_groups'] as $group) {
 	</div>
 
 	<!-- Step 2: Data Input -->
-	<div class="host-clone-section">
+	<div class="clonehosts-section">
 		<h3><?= LangHelper::t('step2.title') ?></h3>
 		<p class="description"><?= LangHelper::t('step2.description') ?></p>
 
@@ -182,7 +182,7 @@ foreach ($data['host_groups'] as $group) {
 	</div>
 
 	<!-- Step 3: Preview -->
-	<div class="host-clone-section">
+	<div class="clonehosts-section">
 		<div class="action-bar">
 			<button type="button" id="preview-btn" class="btn btn-primary" disabled><?= LangHelper::t('preview.btn') ?></button>
 			<span class="preview-hint"><?= LangHelper::t('preview.hint_no_data') ?></span>
@@ -191,19 +191,19 @@ foreach ($data['host_groups'] as $group) {
 </div>
 
 <!-- Hidden form for submitting to preview -->
-<form id="preview-form" method="post" action="zabbix.php?action=host.clone.preview" style="display:none;">
+<form id="preview-form" method="post" action="zabbix.php?action=clonehosts.preview" style="display:none;">
 	<input type="hidden" name="source_hostid" id="hidden-source-hostid" value="" />
 	<input type="hidden" name="host_data" id="hidden-host-data" value="" />
 </form>
 
 <script type="text/javascript">
-	window.hostCloneData = {
+	window.clonehostsData = {
 		hosts: <?= json_encode($hosts_js) ?>,
 		hostGroups: <?= json_encode($host_groups_js) ?>,
 		groupNames: <?= json_encode($group_names) ?>,
 		templateNames: <?= json_encode($template_names) ?>,
-		ajaxUrl: 'zabbix.php?action=host.clone.import',
-		sourceInfoUrl: 'zabbix.php?action=host.clone.source',
+		ajaxUrl: 'zabbix.php?action=clonehosts.import',
+		sourceInfoUrl: 'zabbix.php?action=clonehosts.source',
 		lang: <?= json_encode($data['lang'] ?? LangHelper::getAllForJs()) ?>
 	};
 </script>

@@ -6,7 +6,7 @@
 ** Compatibility helper for Zabbix 6.0 / 6.4 / 7.x API differences.
 */
 
-namespace Modules\HostBatchClone;
+namespace Modules\ZabbixClonehosts;
 
 /**
  * Compatibility helper for Zabbix 6.0 / 6.4 / 7.x.

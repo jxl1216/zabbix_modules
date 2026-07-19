@@ -1,4 +1,4 @@
-# Host Batch Clone Module
+# Zabbix Clonehosts Module
 
 [中文](README.md)
 
@@ -56,22 +56,22 @@ Download the packaged `tar.gz` archive from GitHub Releases, upload it to the se
 
 1. **Download the archive**
 
-   Go to the [Releases page](https://github.com/jxl1216/zabbix_modules/releases) and download the latest `HostBatchClone-x.x.x.tar.gz` file. For example, download `HostBatchClone-1.1.tar.gz`.
+   Go to the [Releases page](https://github.com/jxl1216/zabbix_modules/releases) and download the latest `zabbix_clonehosts-x.x.x.tar.gz` file. For example, download `zabbix_clonehosts-1.1.tar.gz`.
 2. Upload to the Zabbix server and extract to the modules directory:
 
    ```bash
    # Zabbix 6.0 / 7.0
-   tar -xzf HostBatchClone-1.1.tar.gz -C /usr/share/zabbix/modules/
+   tar -xzf zabbix_clonehosts-1.1.tar.gz -C /usr/share/zabbix/modules/
 
    # Zabbix 7.2 / 7.4 / 8.0
-   tar -xzf HostBatchClone-1.1.tar.gz -C /usr/share/zabbix/ui/modules/
+   tar -xzf zabbix_clonehosts-1.1.tar.gz -C /usr/share/zabbix/ui/modules/
    ```
 
-   After extraction, a `HostBatchClone/` subdirectory will be created under the modules directory, with the following structure:
+   After extraction, a `zabbix_clonehosts/` subdirectory will be created under the modules directory, with the following structure:
 
    ```text
    /usr/share/zabbix/ui/modules/
-   └── HostBatchClone/
+   └── zabbix_clonehosts/
        ├── manifest.json
        ├── Module.php
        ├── CompatHelper.php
@@ -80,13 +80,13 @@ Download the packaged `tar.gz` archive from GitHub Releases, upload it to the se
        ├── assets/
        ├── views/
        ├── images/
-       └── host_batch_clone_template.csv
+       └── clonehosts_template.csv
    ```
 
 4. **⚠️ If using Zabbix 6.0, modify manifest_version**
 
    ```bash
-   sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' /usr/share/zabbix/modules/HostBatchClone/manifest.json
+   sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' /usr/share/zabbix/modules/zabbix_clonehosts/manifest.json
    ```
 
    No modification is needed for Zabbix 6.4+ / 7.0+ / 7.2+ / 8.0+ — keep the default value.
@@ -94,7 +94,7 @@ Download the packaged `tar.gz` archive from GitHub Releases, upload it to the se
 5. **Clean up temporary files**
 
    ```bash
-   rm -f /tmp/HostBatchClone-x.x.x.tar.gz
+   rm -f /tmp/zabbix_clonehosts-x.x.x.tar.gz
    ```
 
 ### Method 2: git clone direct deployment (for development / tracking updates)
@@ -110,7 +110,7 @@ git clone https://github.com/jxl1216/zabbix_modules.git /usr/share/zabbix/ui/mod
 If using Zabbix 6.0, you also need to modify manifest_version:
 
 ```bash
-sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' HostBatchClone/manifest.json
+sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' zabbix_clonehosts/manifest.json
 ```
 
 ### Enable the Module
@@ -122,7 +122,7 @@ sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' HostBatchClone/manif
 
 ## CSV Data Format
 
-The module includes a template file `host_batch_clone_template.csv`, which can be downloaded by clicking "Download CSV Template" on the import page. CSV headers and field descriptions:
+The module includes a template file `clonehosts_template.csv`, which can be downloaded by clicking "Download CSV Template" on the import page. CSV headers and field descriptions:
 
 | Field | Required | Description |
 | --- | --- | --- |
@@ -166,24 +166,24 @@ This module is developed based on the Zabbix module framework. File structure:
 - `Module.php`: menu registration (compatible with `Zabbix\Core\CModule` and `Core\CModule`)
 - `CompatHelper.php`: Zabbix 6.0/6.4/7.x/8.x API compatibility helper class
 - `LangHelper.php`: bilingual (Chinese/English) internationalization management (pure PHP array implementation, no gettext dependency)
-- `actions/HostCloneView.php`: main page controller (source host selection, CSV upload, table entry)
-- `actions/HostCloneSource.php`: AJAX source host configuration loading endpoint
-- `actions/HostClonePreview.php`: preview page controller (conflict detection, field status)
-- `actions/HostCloneImport.php`: AJAX import endpoint (creates hosts one by one)
+- `actions/Clonehosts.php`: main page controller (source host selection, CSV upload, table entry)
+- `actions/ClonehostsSource.php`: AJAX source host configuration loading endpoint
+- `actions/ClonehostsPreview.php`: preview page controller (conflict detection, field status)
+- `actions/ClonehostsImport.php`: AJAX import endpoint (creates hosts one by one)
 - `views/`: page views (main page, preview, JSON response)
 - `assets/js/`: JavaScript (CSV parsing, table management, AJAX import progress)
 - `assets/css/`: module stylesheet
-- `host_batch_clone_template.csv`: CSV import template
+- `clonehosts_template.csv`: CSV import template
 
 For extensions, refer to the [Zabbix Module Development Documentation](https://www.zabbix.com/documentation/current/en/devel/modules/file_structure).
 
 ## Version Release
 
-This module is automatically packaged and released via GitHub Actions. When the `version` field in `manifest.json` is upgraded and pushed to the main branch, the packaging process is automatically triggered, generating a `HostBatchClone-<version>.tar.gz` archive and publishing it to the [Releases page](https://github.com/jxl1216/zabbix_modules/releases).
+This module is automatically packaged and released via GitHub Actions. When the `version` field in `manifest.json` is upgraded and pushed to the main branch, the packaging process is automatically triggered, generating a `zabbix_clonehosts-<version>.tar.gz` archive and publishing it to the [Releases page](https://github.com/jxl1216/zabbix_modules/releases).
 
 Each Release includes:
 
-- `HostBatchClone-<version>.tar.gz`: complete module code archive. After extraction, you get a `HostBatchClone/` directory that can be deployed directly to the Zabbix modules directory.
+- `zabbix_clonehosts-<version>.tar.gz`: complete module code archive. After extraction, you get a `zabbix_clonehosts/` directory that can be deployed directly to the Zabbix modules directory.
 
 ## License
 

@@ -3,12 +3,12 @@
 ** Zabbix
 ** Copyright (C) 2001-2024 Zabbix SIA
 **
-** Language helper for Host Batch Clone module.
+** Language helper for Zabbix Clonehosts module.
 ** Auto-detects Zabbix system language and provides bilingual (zh_CN / en_GB) translations.
 ** No gettext dependency — pure PHP array-based translation.
 */
 
-namespace Modules\HostBatchClone;
+namespace Modules\ZabbixClonehosts;
 
 class LangHelper {
 
@@ -18,7 +18,7 @@ class LangHelper {
 	/** @var array Translation table: key => [en_GB => English, zh_CN => Chinese] */
 	private static $translations = [
 		// ===== Menu =====
-		'menu.host_batch_import' => [
+		'menu.clonehosts' => [
 			'en_GB' => 'Host Batch Import',
 			'zh_CN' => '主机批量导入'
 		],

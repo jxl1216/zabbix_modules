@@ -18,23 +18,23 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **/
 
-namespace Modules\HostBatchClone\Actions;
+namespace Modules\ZabbixClonehosts\Actions;
 
 use CController,
 	CControllerResponseData,
 	CControllerResponseFatal,
 	API;
-use Modules\HostBatchClone\CompatHelper;
-use Modules\HostBatchClone\LangHelper;
+use Modules\ZabbixClonehosts\CompatHelper;
+use Modules\ZabbixClonehosts\LangHelper;
 
 /**
- * Preview page controller for Host Batch Clone module.
+ * Preview page controller for Zabbix Clonehosts module.
  *
  * Receives host data from the main form, loads the source host's
  * configuration for inheritance, checks for duplicate host names
  * and existing hosts, and displays a preview before import.
  */
-class HostClonePreview extends CController {
+class ClonehostsPreview extends CController {
 
 	public function init(): void {
 		if (method_exists($this, 'disableCsrfValidation')) {

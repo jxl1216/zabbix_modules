@@ -18,13 +18,13 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **/
 
-namespace Modules\HostBatchClone\Actions;
+namespace Modules\ZabbixClonehosts\Actions;
 
 use CController,
 	CControllerResponseData,
 	API;
-use Modules\HostBatchClone\CompatHelper;
-use Modules\HostBatchClone\LangHelper;
+use Modules\ZabbixClonehosts\CompatHelper;
+use Modules\ZabbixClonehosts\LangHelper;
 
 /**
  * Main page controller for Host Batch Clone module.
@@ -32,7 +32,7 @@ use Modules\HostBatchClone\LangHelper;
  * Displays the batch clone form with source host selection,
  * CSV upload, and online table entry.
  */
-class HostCloneView extends CController {
+class Clonehosts extends CController {
 
 	public function init(): void {
 		if (method_exists($this, 'disableCsrfValidation')) {
