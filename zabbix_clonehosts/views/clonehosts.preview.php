@@ -166,7 +166,7 @@ foreach ($host_data as $item) {
 			<table id="preview-table" class="list-table host-data-table">
 				<thead>
 					<tr>
-						<th><?= LangHelper::t('preview.col_select') ?></th>
+						<th class="col-select"><input type="checkbox" id="preview-select-all" checked /></th>
 						<th>#</th>
 						<th><?= LangHelper::t('col.status') ?></th>
 						<th><?= LangHelper::t('col.host_name') ?></th>

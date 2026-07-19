@@ -41,10 +41,28 @@
 		$('#start-import-btn').text(t('preview.import_selected').replace('{count}', selectedCount));
 	}
 
-	// Re-count when a checkbox changes
-	$(document).on('change', '#preview-table input.row-select', function() {
+	function updateSelectAllCheckbox() {
+		var $readyBoxes = $('#preview-table input.row-select[data-ready="1"]');
+		var totalReady = $readyBoxes.length;
+		var checkedReady = $readyBoxes.filter(':checked').length;
+		$('#preview-select-all').prop('checked', totalReady > 0 && totalReady === checkedReady);
+	}
+
+	// Select / deselect all ready rows
+	$('#preview-select-all').on('change', function() {
+		var checked = $(this).prop('checked');
+		$('#preview-table input.row-select[data-ready="1"]').prop('checked', checked);
 		updateImportButton();
 	});
+
+	// Re-count when a checkbox changes
+	$(document).on('change', '#preview-table input.row-select', function() {
+		updateSelectAllCheckbox();
+		updateImportButton();
+	});
+
+	// Initialize select-all state
+	updateSelectAllCheckbox();
 
 	// ===== Start Import =====
 	$('#start-import-btn').on('click', function() {
