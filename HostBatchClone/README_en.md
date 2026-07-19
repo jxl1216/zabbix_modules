@@ -91,18 +91,7 @@ Download the packaged `tar.gz` archive from GitHub Releases, upload it to the se
 
    No modification is needed for Zabbix 6.4+ / 7.0+ / 7.2+ / 8.0+ — keep the default value.
 
-5. **Set file ownership and reload PHP-FPM**
-
-   ```bash
-   # Set file ownership (choose based on your web server user)
-   chown -R nginx:nginx /usr/share/zabbix/ui/modules/HostBatchClone/
-   # or chown -R www-data:www-data /usr/share/zabbix/ui/modules/HostBatchClone/
-
-   # Reload PHP-FPM
-   systemctl reload php-fpm
-   ```
-
-6. **Clean up temporary files**
+5. **Clean up temporary files**
 
    ```bash
    rm -f /tmp/HostBatchClone-x.x.x.tar.gz

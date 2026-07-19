@@ -91,18 +91,7 @@ tar -xzf HostBatchClone-1.1.tar.gz -C /usr/share/zabbix/ui/modules/
 
    如果使用 Zabbix 6.4+ / 7.0+ / 7.2+ / 8.0+，则无需修改，保持默认值即可。
 
-5. **设置文件所有权并重载 PHP-FPM**
-
-   ```bash
-   # 设置文件所有权（根据实际 Web 服务用户选择）
-   chown -R nginx:nginx /usr/share/zabbix/ui/modules/HostBatchClone/
-   # 或 chown -R www-data:www-data /usr/share/zabbix/ui/modules/HostBatchClone/
-
-   # 重载 PHP-FPM
-   systemctl reload php-fpm
-   ```
-
-6. **清理临时文件**
+5. **清理临时文件**
 
    ```bash
    rm -f /tmp/HostBatchClone-x.x.x.tar.gz
