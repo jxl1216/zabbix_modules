@@ -50,14 +50,16 @@ if (!empty($source_host['parentTemplates'])) {
 $src_tags = [];
 if (!empty($source_host['tags'])) {
 	foreach ($source_host['tags'] as $tag) {
-		$src_tags[] = htmlspecialchars($tag['tag'] . '=' . $tag['value']);
+		$src_tags[] = htmlspecialchars($tag['tag'] . '=' . ($tag['value'] ?? ''));
 	}
 }
 
 $src_macros = [];
 if (!empty($source_host['macros'])) {
 	foreach ($source_host['macros'] as $macro) {
-		$src_macros[] = htmlspecialchars($macro['macro'] . '=' . $macro['value']);
+		// Secret macros (type=1) don't return 'value' in Zabbix 7.x API.
+		$macro_value = ($macro['type'] ?? 0) == 1 ? '******' : ($macro['value'] ?? '');
+		$src_macros[] = htmlspecialchars($macro['macro'] . '=' . $macro_value);
 	}
 }
 

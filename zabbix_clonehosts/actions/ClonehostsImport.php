@@ -273,9 +273,9 @@ class ClonehostsImport extends CController {
 		if (empty($tags) && !empty($source_host['tags'])) {
 			foreach ($source_host['tags'] as $st) {
 				$tags[] = [
-					'tag' => $st['tag'],
-					'value' => $st['value']
-				];
+				'tag' => $st['tag'],
+				'value' => $st['value'] ?? ''
+			];
 			}
 		}
 
@@ -297,10 +297,10 @@ class ClonehostsImport extends CController {
 		if (empty($macros) && !empty($source_host['macros'])) {
 			foreach ($source_host['macros'] as $sm) {
 				$macros[] = [
-					'macro' => $sm['macro'],
-					'value' => $sm['value'],
-					'type' => (int) ($sm['type'] ?? 0)
-				];
+				'macro' => $sm['macro'],
+				'value' => $sm['value'] ?? '',
+				'type' => (int) ($sm['type'] ?? 0)
+			];
 				if (isset($sm['description'])) {
 					$macros[count($macros) - 1]['description'] = $sm['description'];
 				}
