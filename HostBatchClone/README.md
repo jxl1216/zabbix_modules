@@ -1,4 +1,4 @@
-# Host Batch Clone 模块
+﻿# Host Batch Clone 模块
 
 [English](README_en.md)
 
@@ -55,38 +55,20 @@
 
 1. **下载压缩包**
 
-   前往 [Releases 页面](https://github.com/jxl1216/zabbix_modules/releases)，下载最新版本的 `HostBatchClone-x.x.x.tar.gz` 文件到本地。
+   前往 [Releases 页面](https://github.com/jxl1216/zabbix_modules/releases)，下载最新版本的 `HostBatchClone-x.x.x.tar.gz` 文件到本地。如下载 `HostBatchClone-1.1.tar.gz`
+2. 上传到 Zabbix 服务器并解压到模块目录：
 
-   也可使用命令行下载（将 `x.x.x` 替换为实际版本号）：
+```bash
+# Zabbix 6.0 / 7.0
+tar -xzf HostBatchClone-1.1.tar.gz -C /usr/share/zabbix/modules/
 
-   ```bash
-   wget https://github.com/jxl1216/zabbix_modules/releases/download/vx.x.x/HostBatchClone-x.x.x.tar.gz
-   ```
-
-2. **上传到 Zabbix 服务器**
-
-   将下载的压缩包上传到 Zabbix 服务器（使用 scp、rz 或其他方式）：
-
-   ```bash
-   # 在本地执行，将文件上传到服务器
-   scp HostBatchClone-x.x.x.tar.gz root@<zabbix-server-ip>:/tmp/
-   ```
-
-3. **解压到模块目录**
-
-   在 Zabbix 服务器上执行（根据 Zabbix 版本选择对应目录）：
-
-   ```bash
-   # Zabbix 6.0 / 7.0
-   tar -xzf /tmp/HostBatchClone-x.x.x.tar.gz -C /usr/share/zabbix/modules/
-
-   # Zabbix 7.4 / 8.0
-   tar -xzf /tmp/HostBatchClone-x.x.x.tar.gz -C /usr/share/zabbix/ui/modules/
+# Zabbix 7.4 / 8.0
+tar -xzf HostBatchClone-1.1.tar.gz -C /usr/share/zabbix/ui/modules/
+```
    ```
 
    解压后将在模块目录下生成 `HostBatchClone/` 子目录，结构如下：
 
-   ```text
    /usr/share/zabbix/ui/modules/
    └── HostBatchClone/
        ├── manifest.json
