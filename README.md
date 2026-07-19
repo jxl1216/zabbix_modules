@@ -1,14 +1,15 @@
-﻿# Host Batch Clone 模块
+# Host Batch Clone 模块
 
 [English](README_en.md)
 
 ## ✨ 版本兼容性
 
-本模块兼容 Zabbix 6.0 / 6.4 / 7.0+ / 8.0+ 版本。
+本模块兼容 Zabbix 6.0 / 6.4 / 7.0+ / 7.2+ / 8.0+ 版本。
 
 - ✅ Zabbix 6.0.x
 - ✅ Zabbix 6.4.x
 - ✅ Zabbix 7.0.x
+- ✅ Zabbix 7.2.x
 - ✅ Zabbix 7.4.x
 - ✅ Zabbix 8.0.x
 
@@ -62,7 +63,7 @@
 # Zabbix 6.0 / 7.0
 tar -xzf HostBatchClone-1.1.tar.gz -C /usr/share/zabbix/modules/
 
-# Zabbix 7.4 / 8.0
+# Zabbix 7.2 / 7.4 / 8.0
 tar -xzf HostBatchClone-1.1.tar.gz -C /usr/share/zabbix/ui/modules/
 ```
    ```
@@ -88,7 +89,7 @@ tar -xzf HostBatchClone-1.1.tar.gz -C /usr/share/zabbix/ui/modules/
    sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' /usr/share/zabbix/modules/HostBatchClone/manifest.json
    ```
 
-   如果使用 Zabbix 6.4+ / 7.0+ / 8.0+，则无需修改，保持默认值即可。
+   如果使用 Zabbix 6.4+ / 7.0+ / 7.2+ / 8.0+，则无需修改，保持默认值即可。
 
 5. **设置文件所有权并重载 PHP-FPM**
 
@@ -113,7 +114,7 @@ tar -xzf HostBatchClone-1.1.tar.gz -C /usr/share/zabbix/ui/modules/
 # Zabbix 6.0 / 7.0 部署方法
 git clone https://github.com/jxl1216/zabbix_modules.git /usr/share/zabbix/modules/
 
-# Zabbix 7.4 / 8.0 部署方法
+# Zabbix 7.2 / 7.4 / 8.0 部署方法
 git clone https://github.com/jxl1216/zabbix_modules.git /usr/share/zabbix/ui/modules/
 ```
 

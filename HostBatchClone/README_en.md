@@ -4,11 +4,12 @@
 
 ## ✨ Version Compatibility
 
-This module is compatible with Zabbix 6.0 / 6.4 / 7.0+ / 8.0+.
+This module is compatible with Zabbix 6.0 / 6.4 / 7.0+ / 7.2+ / 8.0+.
 
 - ✅ Zabbix 6.0.x
 - ✅ Zabbix 6.4.x
 - ✅ Zabbix 7.0.x
+- ✅ Zabbix 7.2.x
 - ✅ Zabbix 7.4.x
 - ✅ Zabbix 8.0.x
 
@@ -62,7 +63,7 @@ Download the packaged `tar.gz` archive from GitHub Releases, upload it to the se
    # Zabbix 6.0 / 7.0
    tar -xzf HostBatchClone-1.1.tar.gz -C /usr/share/zabbix/modules/
 
-   # Zabbix 7.4 / 8.0
+   # Zabbix 7.2 / 7.4 / 8.0
    tar -xzf HostBatchClone-1.1.tar.gz -C /usr/share/zabbix/ui/modules/
    ```
 
@@ -88,7 +89,7 @@ Download the packaged `tar.gz` archive from GitHub Releases, upload it to the se
    sed -i 's/"manifest_version": 2.0/"manifest_version": 1.0/' /usr/share/zabbix/modules/HostBatchClone/manifest.json
    ```
 
-   No modification is needed for Zabbix 6.4+ / 7.0+ / 8.0+ — keep the default value.
+   No modification is needed for Zabbix 6.4+ / 7.0+ / 7.2+ / 8.0+ — keep the default value.
 
 5. **Set file ownership and reload PHP-FPM**
 
@@ -113,7 +114,7 @@ Download the packaged `tar.gz` archive from GitHub Releases, upload it to the se
 # Zabbix 6.0 / 7.0
 git clone https://github.com/jxl1216/zabbix_modules.git /usr/share/zabbix/modules/
 
-# Zabbix 7.4 / 8.0
+# Zabbix 7.2 / 7.4 / 8.0
 git clone https://github.com/jxl1216/zabbix_modules.git /usr/share/zabbix/ui/modules/
 ```
 
