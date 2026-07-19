@@ -55,33 +55,15 @@ Download the packaged `tar.gz` archive from GitHub Releases, upload it to the se
 
 1. **Download the archive**
 
-   Go to the [Releases page](https://github.com/jxl1216/zabbix_modules/releases) and download the latest `HostBatchClone-x.x.x.tar.gz` file.
-
-   You can also use the command line (replace `x.x.x` with the actual version number):
-
-   ```bash
-   wget https://github.com/jxl1216/zabbix_modules/releases/download/vx.x.x/HostBatchClone-x.x.x.tar.gz
-   ```
-
-2. **Upload to the Zabbix server**
-
-   Upload the downloaded archive to your Zabbix server (using scp, rz, or other methods):
-
-   ```bash
-   # Run locally to upload to the server
-   scp HostBatchClone-x.x.x.tar.gz root@<zabbix-server-ip>:/tmp/
-   ```
-
-3. **Extract to the modules directory**
-
-   Run on the Zabbix server (choose the directory based on your Zabbix version):
+   Go to the [Releases page](https://github.com/jxl1216/zabbix_modules/releases) and download the latest `HostBatchClone-x.x.x.tar.gz` file. For example, download `HostBatchClone-1.1.tar.gz`.
+2. Upload to the Zabbix server and extract to the modules directory:
 
    ```bash
    # Zabbix 6.0 / 7.0
-   tar -xzf /tmp/HostBatchClone-x.x.x.tar.gz -C /usr/share/zabbix/modules/
+   tar -xzf HostBatchClone-1.1.tar.gz -C /usr/share/zabbix/modules/
 
    # Zabbix 7.4 / 8.0
-   tar -xzf /tmp/HostBatchClone-x.x.x.tar.gz -C /usr/share/zabbix/ui/modules/
+   tar -xzf HostBatchClone-1.1.tar.gz -C /usr/share/zabbix/ui/modules/
    ```
 
    After extraction, a `HostBatchClone/` subdirectory will be created under the modules directory, with the following structure:
