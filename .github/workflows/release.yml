@@ -1,8 +1,5 @@
 name: Release Zabbix Clonehosts Module
 
-# 当 manifest.json 中的 version 字段升级并推送到主分支时，自动打包 tar.gz 并发布 Release。
-# 也支持手动触发（workflow_dispatch）。
-
 on:
   push:
     branches:
@@ -23,37 +20,86 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate manifest.json format
+        run: |
+          if ! python3 -c "import json; json.load(open('zabbix_clonehosts/manifest.json'))"; then
+            echo "ERROR: manifest.json is not valid JSON"
+            exit 1
+          fi
+          echo "manifest.json is valid"
+
       - name: Read version from manifest.json
         id: version
         run: |
           VERSION=$(python3 -c "import json; print(json.load(open('zabbix_clonehosts/manifest.json'))['version'])")
+          if [ -z "$VERSION" ]; then
+            echo "ERROR: version field is empty"
+            exit 1
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Detected module version: $VERSION"
+
+      - name: Check if version changed from previous commit
+        id: version_changed
+        if: github.event_name == 'push'
+        run: |
+          PREV_VERSION=$(git show HEAD~1:zabbix_clonehosts/manifest.json 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin)['version'])")
+          CURRENT_VERSION="${{ steps.version.outputs.version }}"
+          if [ "$PREV_VERSION" = "$CURRENT_VERSION" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Version did not change ($PREV_VERSION), skipping release."
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Version changed from $PREV_VERSION to $CURRENT_VERSION"
+          fi
 
       - name: Check if tag already exists
         id: check_tag
         run: |
           if git rev-parse "refs/tags/v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Tag v${{ steps.version.outputs.version }} already exists, skipping release."
+            echo "Tag v${{ steps.version.outputs.version }} already exists."
           else
             echo "exists=false" >> $GITHUB_OUTPUT
-            echo "Tag v${{ steps.version.outputs.version }} does not exist, will create release."
+            echo "Tag v${{ steps.version.outputs.version }} does not exist."
+          fi
+
+      - name: Determine if release should proceed
+        id: should_release
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "proceed=true" >> $GITHUB_OUTPUT
+            echo "Manual trigger, proceeding with release."
+          elif [ "${{ steps.version_changed.outputs.changed }}" = "true" ] && [ "${{ steps.check_tag.outputs.exists }}" = "false" ]; then
+            echo "proceed=true" >> $GITHUB_OUTPUT
+            echo "Version changed and tag doesn't exist, proceeding with release."
+          else
+            echo "proceed=false" >> $GITHUB_OUTPUT
+            echo "Release skipped: version_changed=${{ steps.version_changed.outputs.changed }}, tag_exists=${{ steps.check_tag.outputs.exists }}"
           fi
 
       - name: Package tar.gz
-        if: steps.check_tag.outputs.exists == 'false'
+        if: steps.should_release.outputs.proceed == 'true'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          # 将 zabbix_clonehosts 目录打包，解压后即为 zabbix_clonehosts/ 目录
-          tar -czf "zabbix_clonehosts-${VERSION}.tar.gz" zabbix_clonehosts
+          EXCLUDE_FILES=(
+            ".git"
+            ".gitignore"
+            "*.md"
+            "*.csv"
+          )
+          EXCLUDE_ARGS=""
+          for f in "${EXCLUDE_FILES[@]}"; do
+            EXCLUDE_ARGS="$EXCLUDE_ARGS --exclude=$f"
+          done
+          tar -czf "zabbix_clonehosts-${VERSION}.tar.gz" $EXCLUDE_ARGS zabbix_clonehosts
           echo "Packaged zabbix_clonehosts-${VERSION}.tar.gz:"
           ls -lh "zabbix_clonehosts-${VERSION}.tar.gz"
           echo "--- Archive contents ---"
-          tar -tzf "zabbix_clonehosts-${VERSION}.tar.gz" | head -n 20
+          tar -tzf "zabbix_clonehosts-${VERSION}.tar.gz" | head -n 30
 
       - name: Create tag and publish Release
-        if: steps.check_tag.outputs.exists == 'false'
+        if: steps.should_release.outputs.proceed == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
@@ -65,13 +111,20 @@ jobs:
           body: |
             ## Zabbix Clonehosts 模块 v${{ steps.version.outputs.version }}
 
+            ### 功能特性
+
+            - 批量克隆主机配置
+            - 支持从 CSV 导入主机数据
+            - 实时导入进度条（成功/失败/待处理统计）
+            - 兼容 Zabbix 6.0 / 6.4 / 7.x
+
             ### 部署方式
 
             1. 下载下方 `zabbix_clonehosts-${{ steps.version.outputs.version }}.tar.gz`
             2. 上传到 Zabbix 服务器并解压到模块目录：
 
             ```bash
-            # Zabbix 6.0 / 7.0
+            # Zabbix 6.0 / 6.4 / 7.0
             tar -xzf zabbix_clonehosts-${{ steps.version.outputs.version }}.tar.gz -C /usr/share/zabbix/modules/
 
             # Zabbix 7.2 / 7.4 / 8.0
