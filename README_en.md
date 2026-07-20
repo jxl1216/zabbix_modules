@@ -17,10 +17,10 @@ This module is compatible with Zabbix 6.0 / 7.0+ / 8.0+.
 
 Zabbix Clonehosts is a frontend module for Zabbix that batch-clones and imports a large number of hosts based on an existing monitored host's configuration. It adds a "Host Batch Import" menu item under the "Data collection" menu in Zabbix Web (after "Hosts"), supporting both CSV file import and online table entry, with preview, conflict detection, and real-time import progress feedback.
 
-![1](images/image.png)
-![2](images/image-1.png)
-![3](images/image-2.png)
-![4](images/image-3.png)
+![1]zabbix_clonehosts/(images/image.png)
+![2](zabbix_clonehosts/images/image-1.png)
+![3](zabbix_clonehosts/images/image-2.png)
+![4](zabbix_clonehosts/images/image-3.png)
 
 ## Features
 
