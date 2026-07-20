@@ -17,10 +17,10 @@
 
 这是一个 Zabbix 前端模块，用于基于已有监控主机的配置批量克隆导入大量主机。模块在 Zabbix Web 的「数据采集（Data collection）」菜单下新增「主机批量导入」菜单项（位于「主机」之后），支持 CSV 文件导入和在线表格录入两种方式，并提供预览、冲突检测和实时导入进度反馈功能。
 
-![1](images/image.png)
-![2](images/image-1.png)
-![3](images/image-2.png)
-![4](images/image-3.png)
+![1](zabbix_clonehosts/images/image.png)
+![2](zabbix_clonehosts/images/image-1.png)
+![3](zabbix_clonehosts/images/image-2.png)
+![4](zabbix_clonehosts/images/image-3.png)
 
 ## 功能特性
 
